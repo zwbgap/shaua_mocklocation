@@ -1,6 +1,6 @@
 # 影梭 (MockLocation) 变更与部署指南
 
-> 包名：`com.shaua.mocklocation` | 版本：1.0.0 | 更新日期：2026-10-10
+> 包名：`com.shaua.mocklocation` | 版本：1.0.2 | 更新日期：2026-10-11
 
 ---
 
@@ -36,9 +36,36 @@
 
 ---
 
-## 二、今日变更（2026-10-10）
+## 二、版本变更记录
 
-### 2.1 架构重构
+### v1.0.2（2026-10-11）
+
+#### 安全加固
+| 变更项 | 说明 |
+|---|---|
+| 禁止应用备份 | `AndroidManifest.xml` 添加 `android:allowBackup="false"`，防止 ADB 备份泄露用户数据 |
+| 网络安全配置 | 新增 `network_security_config.xml`，全局禁止明文流量（`cleartextTrafficPermitted="false"`） |
+| FileProvider 收紧 | 移除 `provider_paths.xml` 中 `<external-path path=".">`（暴露整个 SD 卡），删除重复的 `cache-path` |
+| 移除无用权限 | 删除 `READ_PHONE_STATE`（未实际使用）、`MOUNT_UNMOUNT_FILESYSTEMS`（未实际使用） |
+
+#### 功能调整
+| 变更项 | 说明 |
+|---|---|
+| 移除历史记录有效期设置 | 设置页不再提供有效期配置，固定为 7 天自动归档 |
+| APK 命名 ASCII 化 | 输出文件名前缀 `迁境_` → `qianjing_`，解决 GitHub Release 上传时中文乱码 |
+
+### v1.0.1（2026-10-11）
+
+#### 界面与交互
+| 变更项 | 说明 |
+|---|---|
+| 更新应用图标 | 青色背景 `#009688` + 白色定位针 + 信号波纹（表示虚拟定位） |
+| 关于页重构 | 「反馈与更新」分类改名为「关于」；版本号并入检测更新摘要；开发者并入联系作者摘要 |
+| 反馈流程优化 | 合并问题反馈与邮箱：点击反馈弹框提醒，确认后调邮件应用并自动附上日志文件 |
+
+### v1.0.0（2026-10-10）— 首个版本
+
+#### 架构重构
 
 | 变更项 | 说明 |
 |---|---|
@@ -152,7 +179,7 @@ GoGoGo/
 | 依赖 | 版本要求 |
 |---|---|
 | JDK | 17 或更高 |
-| Android SDK | platform 32（Android 12L）、build-tools 36.0.0 |
+| Android SDK | platform 34（Android 14）、build-tools 36.0.0 |
 | Gradle | 8.13（由 Wrapper 自动下载，无需手动安装） |
 | Android Gradle Plugin | 8.12.1（build.gradle 中声明） |
 | 网络 | 首次构建需下载依赖（Maven Central + Google） |
@@ -165,14 +192,14 @@ cd GoGoGo
 # 1. 构建 debug APK
 .\gradlew.bat assembleDebug
 
-# 输出路径：app/build/outputs/apk/debug/Go_1.0.0_arm64-v8a_debug.apk
+# 输出路径：app/build/outputs/apk/debug/qianjing_1.0.2_arm64-v8a_debug.apk
 ```
 
 ### 4.4 真机安装与配置
 
 1. **安装 APK**：
    ```powershell
-   adb install -r app\build\outputs\apk\debug\Go_1.0.0_arm64-v8a_debug.apk
+   adb install -r app\build\outputs\apk\debug\qianjing_1.0.2_arm64-v8a_debug.apk
    ```
 
 2. **开启模拟位置权限**（必需）：
@@ -235,17 +262,15 @@ cd GoGoGo
 
 ### 已知限制
 
-1. **targetSdk = 32**：已过期（Google Play 要求 ≥ 34），如需上架需升级
-2. **仅支持 arm64-v8a**：不支持 32 位设备
-3. **存储权限**：使用 `requestLegacyExternalStorage`，未适配 Scoped Storage
-4. **`local.properties` 不入库**：新设备需自行配置（已随项目复制）
+1. **仅支持 arm64-v8a**：不支持 32 位设备
+2. **存储权限**：使用 `requestLegacyExternalStorage`，未适配 Scoped Storage
+3. **`local.properties` 不入库**：新设备需自行配置（已随项目复制）
 
 ### 后续优化方向
 
 | 优先级 | 优化项 | 说明 |
 |---|---|---|
-| 高 | 升级 targetSdk 到 34 | 适配 Android 14，处理前台服务类型声明 |
-| 高 | 适配 Scoped Storage | 移除 `requestLegacyExternalStorage` |
+| 高 | 适配 Scoped Storage | 移除 `requestLegacyExternalStorage`，使用 MediaStore/SAF |
 | 中 | 拆分 MainActivity | 引入 ViewModel + Repository 后可进一步拆分 UI 逻辑 |
 | 中 | 补充单元测试 | 为 `MapUtils` 坐标转换、`GoUtils` 工具方法编写测试 |
 | 低 | 多 ABI 支持 | 增加 `armeabi-v7a`、`x86_64` 支持 |

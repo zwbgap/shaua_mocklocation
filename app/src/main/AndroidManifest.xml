@@ -16,7 +16,6 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -27,11 +26,7 @@
 
     <!-- 允许程序打开网络套接字 -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 允许挂载和反挂载文件系统可移动存储 -->
-    <uses-permission
-        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
-        tools:ignore="ProtectedPermissions" />
-    <!-- 允许程序读取底层系统日志文件 -->
+    <!-- 允许读取底层系统日志文件 -->
     <uses-permission
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
@@ -55,6 +50,8 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:allowBackup="false"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/AppTheme">
 
         <uses-library
