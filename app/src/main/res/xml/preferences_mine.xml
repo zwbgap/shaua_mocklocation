@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    app:iconSpaceReserved="false">
+
+    <PreferenceCategory
+        app:title="主题"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            app:key="setting_theme_color"
+            app:title="主题配色"
+            app:summary="选择主题颜色"
+            app:defaultValue="teal"
+            app:entries="@array/theme_color_entries"
+            app:entryValues="@array/theme_color_values"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="日志"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            app:key="setting_log_off"
+            app:title="关闭日志"
+            app:summary="关闭后不再记录运行日志"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_view_log"
+            app:title="查看日志"
+            app:summary="查看应用运行日志记录"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="定位设置"
+        app:iconSpaceReserved="false">
+
+        <EditTextPreference
+            app:key="setting_altitude"
+            app:title="海拔高度(米)"
+            app:defaultValue="55.0"
+            app:summary="55.0"
+            app:iconSpaceReserved="false"/>
+
+        <SwitchPreferenceCompat
+            app:key="setting_random_offset"
+            app:title="随机偏移"
+            app:summary="仅在使用历史位置时生效"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+        <EditTextPreference
+            app:key="setting_lat_max_offset"
+            app:title="经度最大偏移距离(米)"
+            app:defaultValue="10.0"
+            app:summary="10.0"
+            app:iconSpaceReserved="false"/>
+        <EditTextPreference
+            app:key="setting_lon_max_offset"
+            app:title="纬度最大偏移距离(米)"
+            app:defaultValue="10.0"
+            app:summary="10.0"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="记录"
+        app:iconSpaceReserved="false">
+
+        <EditTextPreference
+            app:key="setting_history_expiration"
+            app:title="历史记录有效期(天)"
+            app:defaultValue="30"
+            app:summary="30"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="反馈与更新"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="pref_feedback"
+            app:title="问题反馈"
+            app:summary="分享日志文件给开发者"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_update"
+            app:title="检测更新"
+            app:summary="检查是否有新版本"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_contact"
+            app:title="联系作者"
+            app:summary="前往项目主页"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_dev"
+            app:title="开发人员选项"
+            app:summary="设置模拟位置应用"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="关于"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="pref_version"
+            app:title="版本号"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_author"
+            app:title="开发者"
+            app:summary="shaua"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

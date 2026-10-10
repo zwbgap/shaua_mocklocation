@@ -1,0 +1,110 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">迁境</string>
+    <string name="app_settings">设置</string>
+    <string name="app_history">历史记录</string>
+    <string name="app_author">shaua</string>
+    <string name="app_statement">仅供学习使用，否则后果自负！</string>
+    <string name="app_service_tips">迁境服务正在运行中</string>
+    <string name="app_agreement">用户协议</string>
+    <string name="app_agreement_content">欢迎您使用「迁境」。在使用本软件前，请您仔细阅读本协议的全部内容。一旦您安装或使用本软件，即视为您已充分理解并同意接受本协议的全部条款。\n\n一、服务说明\n1. 本软件是一款位置模拟工具，为用户提供位置修改、位置收藏、位置搜索等功能，仅供学习、开发测试及个人娱乐用途。\n2. 本软件需要您在系统开发者选项中将本应用设置为「模拟位置信息应用」后方可正常使用核心功能。\n3. 本软件需要获取定位权限以提供地图展示、位置搜索等基础服务。\n\n二、用户行为规范\n1. 您承诺仅在合法、合规的前提下使用本软件，不得利用本软件从事任何违反法律法规或损害他人合法权益的行为。\n2. 严禁利用本软件侵犯他人隐私权、实施欺诈、作弊或其他不当行为。如因此产生任何法律责任，由您自行承担。\n3. 您不得对本软件进行反向工程、反向编译、反汇编，或以其他方式试图获取本软件源代码。\n4. 您不得修改、破解本软件，不得去除或改变本软件的版权标识。\n\n三、知识产权\n1. 本软件的著作权、商标权及其他知识产权均归软件作者所有。\n2. 未经书面授权，任何人不得复制、分发、修改本软件或用于商业用途。\n\n四、免责声明\n1. 因用户使用本软件而造成的自身或他人任何损失（包括但不限于数据丢失、账号封禁、隐私泄露等），均由用户自行承担，软件作者不承担任何责任。\n2. 本软件保证不含恶意代码，但对于从非官方渠道获取的本软件，作者无法保证其安全性，不承担由此引起的直接或间接损害责任。\n3. 因设备软硬件环境差异，本软件不保证在所有设备上均能正常运行。\n4. 本软件可能因系统更新、接口变更等原因出现功能异常，作者将尽力修复但不做保证。\n\n五、协议变更\n1. 软件作者有权根据需要修改本协议条款，修改后的协议将在应用内公告。\n2. 如您不同意修改后的条款，请停止使用本软件。继续使用则视为接受修改后的协议。\n\n六、其他\n1. 本协议的解释权归软件作者所有。\n2. 如您不接受本协议的任何条款，请立即删除本软件。</string>
+    <string name="app_privacy">隐私政策</string>
+    <string name="app_privacy_content">我们非常重视您的个人信息保护。本隐私政策将向您说明「迁境」如何收集、使用、存储和保护您的信息。\n\n一、信息收集\n本软件不会主动收集、上传您的个人身份信息。在使用过程中，可能涉及以下信息：\n1. 位置信息：为实现地图展示、位置搜索、位置模拟等核心功能，本软件需要获取您的定位权限（精确位置、粗略位置）。位置信息仅在本地处理，不会上传至服务器。\n2. 本地存储数据：您收藏的位置、历史记录等数据仅保存在您的设备本地数据库中，不会上传。\n3. 日志信息：本软件在运行过程中会在本地生成运行日志，用于排查问题，日志仅保存在本地，您可在设置中查看或分享。\n4. 网络信息：本软件需要联网以加载地图数据和搜索地点，网络请求仅涉及地图服务提供商（百度地图），不包含您的个人身份信息。\n\n二、权限说明\n1. 定位权限（ACCESS_FINE_LOCATION、ACCESS_COARSE_LOCATION、ACCESS_BACKGROUND_LOCATION）：用于地图展示、位置搜索和位置模拟。\n2. 网络权限（INTERNET、ACCESS_NETWORK_STATE）：用于加载地图和搜索地点。\n3. Wi-Fi 权限（ACCESS_WIFI_STATE、CHANGE_WIFI_STATE）：用于辅助定位。\n4. 前台服务权限（FOREGROUND_SERVICE_LOCATION）：用于在后台持续提供位置模拟服务。\n5. 存储权限（READ_EXTERNAL_STORAGE）：用于读取日志文件等。\n6. 安装权限（REQUEST_INSTALL_PACKAGES）：用于应用内更新。\n7. 模拟位置权限（ACCESS_MOCK_LOCATION）：本软件的核心功能，需您在开发者选项中手动授权。\n\n三、第三方 SDK 说明\n本软件使用以下第三方 SDK，其可能按照各自的隐私政策处理信息：\n1. 百度地图 SDK：用于地图展示、定位和地点搜索。可能收集设备标识、位置信息以提供地图服务。详情请参考百度地图隐私政策。\n2. OkHttp：用于网络请求。\n3. XLog：用于本地日志记录。\n4. AndroidX / Material Components：谷歌官方支持库。\n\n四、信息存储与保护\n1. 您的收藏和历史记录仅存储在您的设备本地，您可以随时在应用内删除。\n2. 本软件不会将您的个人信息上传至任何服务器。\n3. 我们采取合理措施保护您的本地数据安全，但请注意任何存储方式都无法保证绝对安全。\n\n五、您的权利\n1. 您可以随时关闭定位权限，关闭后部分功能将无法使用。\n2. 您可以随时删除本地的收藏和历史记录。\n3. 您可以卸载本软件以清除所有本地数据。\n\n六、未成年人保护\n本软件不面向未成年人提供服务。若您是未成年人，请在监护人指导下使用。\n\n七、政策更新\n本隐私政策可能随功能更新而调整，更新后将在应用内公告。继续使用即视为您同意更新后的政策。\n\n八、联系我们\n如您对本隐私政策有任何疑问，可通过应用内的「联系作者」功能反馈。</string>
+    <string name="app_agreement_privacy">已阅读《用户协议》和《隐私政策》</string>
+    <string name="app_error_agreement">必须先接受\n《用户协议》和《隐私政策》</string>
+    <string name="app_error_read">请依次阅读并接受\n《用户协议》和《隐私政策》</string>
+    <string name="app_error_gps">定位不可用，请检查 GPS 是否开启</string>
+    <string name="app_error_network">网络不可用，请检查网络连接</string>
+    <string name="app_error_permission">权限不足，请授予相关权限</string>
+    <string name="app_error_input">输入有误，请检查输入是否合法</string>
+    <string name="app_error_input_null">输入不能为空，请重新输入内容</string>
+    <string name="app_error_search">查找失败，请检查网络或定位</string>
+    <string name="app_search_null">没有匹配结果，请重新搜索</string>
+    <string name="app_location_copy">位置已复制到剪切板</string>
+    <string name="app_location_save">位置已保存</string>
+
+    <!-- 欢迎页 -->
+    <string name="welcome_btn_txt">进入应用</string>
+    <string name="app_btn_agree">同意并继续</string>
+    <string name="app_btn_disagree">不同意</string>
+
+    <!-- 定位相关参数 -->
+    <string name="setting_group_location">定位</string>
+    <string name="setting_altitude">海拔高度(米)</string>
+    <string name="setting_altitude_default">55.0</string>
+
+    <!-- 位置偏移相关参数 -->
+    <string name="setting_group_location_offset">位置偏移</string>
+    <string name="setting_random_offset">随机偏移</string>
+    <string name="setting_random_offset_summary">仅在使用历史位置时生效</string>
+    <string name="setting_random_offset_default">10.0</string>
+    <string name="setting_lat_max_offset">经度最大偏移距离(米)</string>
+    <string name="setting_lon_max_offset">纬度最大偏移距离(米)</string>
+    <!-- 记录相关参数 -->
+    <string name="setting_group_log">记录</string>
+    <string name="setting_log_off">关闭日志</string>
+    <string name="setting_history_expiration">历史记录有效期(天)</string>
+    <!-- 关于相关参数 -->
+    <string name="setting_group_about">关于</string>
+    <string name="setting_version">版本号</string>
+    <string name="setting_author">开发者</string>
+
+    <!-- 日志页面 -->
+    <string name="app_log_viewer">运行日志</string>
+
+    <!-- 历史记录页面 -->
+    <string name="history_expiration">7</string>
+    <string name="history_location_default_name">地图位置</string>
+    <string name="history_idle">暂无历史记录</string>
+    <string name="history_delete_ok">删除成功！</string>
+    <string name="history_delete_error">删除记录失败</string>
+    <string name="history_error_location">定位失败，请手动选取定位点</string>
+    <string name="history_error_search">未搜索到指定内容</string>
+
+    <!-- 主界面 -->
+    <string name="label_longitude">经度</string>
+    <string name="label_latitude">纬度</string>
+    <string name="input_position_ok">传送</string>
+    <string name="input_position_cancel">取消</string>
+    <string name="input_position_baidu">BD09 坐标系</string>
+    <string name="input_position_gps">GPS 坐标系</string>
+    <string name="label_coord_string">坐标串</string>
+    <string name="hint_coord_string">粘贴坐标串，如 118.486,31.365</string>
+    <string name="coord_parse_hint">支持逗号/空格分隔，或 lat/lng 格式</string>
+    <string name="input_button">输入位置</string>
+    <string name="cur_position">返回当前位置</string>
+    <string name="zoom_in">放大</string>
+    <string name="zoom_out">缩小</string>
+
+    <!-- 百度地图 -->
+    <string name="map_pic_sate">卫星图</string>
+    <string name="map_pic_normal">普通图</string>
+
+    <!-- POI 面板 -->
+    <string name="poi_action_favorite">收藏</string>
+    <string name="poi_action_copy">复制</string>
+    <string name="poi_action_share">分享</string>
+
+    <!-- 收藏页 -->
+    <string name="favorites_empty">暂无收藏位置\n长按地图标记后点击「收藏」可保存位置</string>
+    <string name="favorites_wgs_format">%1$s,%2$s</string>
+
+    <!-- 更新 -->
+    <string name="update_title">新版本可用</string>
+    <string name="update_downloading">升级文件下载中。。。</string>
+    <string name="update_last" tools:ignore="UnusedResources">恭喜，迁境已是最新版</string>
+    <string name="update_download">立即下载</string>
+    <string name="update_ignore">忽略一次</string>
+    <string name="update_time">更新时间：</string>
+    <string name="update_commit">提交信息：</string>
+
+    <!-- 底部导航 -->
+    <string name="nav_location">位置</string>
+    <string name="nav_favorites">收藏</string>
+    <string name="nav_mine">我的</string>
+
+    <!-- 菜单项 -->
+    <string name="action_refresh">刷新</string>
+    <string name="action_delete">删除</string>
+    <string name="action_clear_log">清空日志</string>
+    <string name="action_share_log">分享日志</string>
+</resources>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/main_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.baidu.mapapi.map.MapView
+            android:id="@+id/bdMapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 右上角：地图类型切换 -->
+        <RadioGroup
+            android:id="@+id/RadioGroupMapType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_map_control"
+            android:orientation="vertical"
+            android:padding="2dp"
+            tools:ignore="RelativeOverlap">
+
+            <RadioButton
+                android:id="@+id/mapNormal"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:button="@null"
+                android:checked="true"
+                android:gravity="center"
+                android:minWidth="64dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/map_pic_normal"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="13sp" />
+
+            <RadioButton
+                android:id="@+id/mapSatellite"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:button="@null"
+                android:gravity="center"
+                android:minWidth="64dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/map_pic_sate"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="13sp" />
+        </RadioGroup>
+
+        <!-- 右侧：地图控制按钮组（输入位置 / 定位 / 放大 / 缩小） -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_below="@id/RadioGroupMapType"
+            android:background="@drawable/bg_map_control"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <ImageButton
+                android:id="@+id/input_pos"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/input_button"
+                android:theme="@style/RippleWhite"
+                app:srcCompat="@drawable/ic_input"
+                app:tint="?attr/colorPrimary" />
+
+            <ImageButton
+                android:id="@+id/cur_position"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cur_position"
+                android:theme="@style/RippleWhite"
+                app:srcCompat="@drawable/ic_home_position"
+                app:tint="?attr/colorPrimary" />
+
+            <ImageButton
+                android:id="@+id/zoom_in"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/zoom_in"
+                android:theme="@style/RippleWhite"
+                app:srcCompat="@drawable/ic_zoom_in"
+                app:tint="?attr/colorPrimary" />
+
+            <ImageButton
+                android:id="@+id/zoom_out"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/zoom_out"
+                android:theme="@style/RippleWhite"
+                app:srcCompat="@drawable/ic_zoom_out"
+                app:tint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center_horizontal|center_vertical"
+            android:paddingBottom="4dp"
+            android:text="@string/app_statement"
+            android:textColor="#8A000000"
+            android:textSize="10sp"
+            tools:ignore="SmallSp" />
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

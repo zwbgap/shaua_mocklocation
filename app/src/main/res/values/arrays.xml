@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 主题配色 -->
+    <string-array name="theme_color_entries">
+        <item>青色</item>
+        <item>蓝色</item>
+        <item>紫色</item>
+        <item>橙色</item>
+    </string-array>
+    <string-array name="theme_color_values">
+        <item>teal</item>
+        <item>blue</item>
+        <item>purple</item>
+        <item>orange</item>
+    </string-array>
+
+</resources>

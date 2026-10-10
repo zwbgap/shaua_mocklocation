@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="16dp">
+
+    <!-- 坐标串输入区：粘贴后自动拆分到下方经纬度 -->
+    <EditText
+        android:id="@+id/input_coord_string"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_input_field"
+        android:drawableStart="@drawable/ic_input"
+        android:drawablePadding="10dp"
+        android:hint="@string/hint_coord_string"
+        android:inputType="text"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E"
+        android:textSize="15sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="4dp"
+        android:text="@string/coord_parse_hint"
+        android:textColor="#BDBDBD"
+        android:textSize="11sp" />
+
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="14dp"
+        android:background="#EEEEEE" />
+
+    <!-- 经度 -->
+    <EditText
+        android:id="@+id/input_longitude"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:autofillHints="longitude"
+        android:background="@drawable/bg_input_field"
+        android:drawableStart="@drawable/ic_longitude"
+        android:drawablePadding="10dp"
+        android:hint="@string/label_longitude"
+        android:inputType="text"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E"
+        android:textSize="15sp" />
+
+    <!-- 纬度 -->
+    <EditText
+        android:id="@+id/input_latitude"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:autofillHints="latitude"
+        android:background="@drawable/bg_input_field"
+        android:drawableStart="@drawable/ic_latitude"
+        android:drawablePadding="10dp"
+        android:hint="@string/label_latitude"
+        android:inputType="text"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E"
+        android:textSize="15sp" />
+
+    <!-- 坐标系选择 -->
+    <RadioGroup
+        android:id="@+id/RadioGroupMapType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_coord_type"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/pos_type_bd"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:button="@null"
+            android:checked="true"
+            android:gravity="center"
+            android:text="@string/input_position_baidu"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="14sp" />
+
+        <RadioButton
+            android:id="@+id/pos_type_gps"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:button="@null"
+            android:gravity="center"
+            android:text="@string/input_position_gps"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="14sp" />
+    </RadioGroup>
+
+    <!-- 按钮区：左右对称分布 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/input_position_cancel"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_btn_secondary"
+            android:text="@string/input_position_cancel"
+            android:textColor="#616161"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/input_position_ok"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:backgroundTint="?attr/colorAccent"
+            android:text="@string/input_position_ok"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>
