@@ -53,9 +53,6 @@ public class FragmentSettings extends PreferenceFragmentCompat {
             });
         }
 
-        EditTextPreference pfPosHisValid = findPreference("setting_history_expiration");
-        setupDecimalEditTextPreference(pfPosHisValid);
-
         String verName = GoUtils.getVersionName(FragmentSettings.this.getContext());
         Preference pfVersion = findPreference("setting_version");
         if (pfVersion != null) {

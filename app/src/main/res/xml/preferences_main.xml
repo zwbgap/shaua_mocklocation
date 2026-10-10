@@ -48,12 +48,6 @@
             app:title="@string/setting_log_off"
             app:defaultValue="false"
             app:iconSpaceReserved="false"/>
-        <EditTextPreference
-            app:key="setting_history_expiration"
-            app:title="@string/setting_history_expiration"
-            app:defaultValue="@string/history_expiration"
-            app:summary="@string/history_expiration"
-            app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory

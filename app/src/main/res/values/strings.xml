@@ -42,7 +42,6 @@
     <!-- 记录相关参数 -->
     <string name="setting_group_log">记录</string>
     <string name="setting_log_off">关闭日志</string>
-    <string name="setting_history_expiration">历史记录有效期(天)</string>
     <!-- 关于相关参数 -->
     <string name="setting_group_about">关于</string>
     <string name="setting_version">版本号</string>
@@ -52,7 +51,6 @@
     <string name="app_log_viewer">运行日志</string>
 
     <!-- 历史记录页面 -->
-    <string name="history_expiration">7</string>
     <string name="history_location_default_name">地图位置</string>
     <string name="history_idle">暂无历史记录</string>
     <string name="history_delete_ok">删除成功！</string>

@@ -104,15 +104,9 @@ public class HistoryActivity extends BaseActivity {
     private List<Map<String, Object>> fetchAllRecord() {
         List<Map<String, Object>> data = new ArrayList<>();
         try {
-            // 先清理过期记录
-            double limits;
-            try {
-                limits = Double.parseDouble(sharedPreferences.getString("setting_history_expiration",
-                        getResources().getString(R.string.history_expiration)));
-            } catch (NumberFormatException e) {
-                limits = 7;
-            }
-            locationRepository.archiveExpired((long) limits);
+            // 先清理过期记录（固定有效期 7 天）
+            long limits = 7;
+            locationRepository.archiveExpired(limits);
 
             List<FavoriteLocation> list = locationRepository.findAll();
             for (FavoriteLocation loc : list) {

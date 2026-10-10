@@ -67,18 +67,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:title="记录"
-        app:iconSpaceReserved="false">
-
-        <EditTextPreference
-            app:key="setting_history_expiration"
-            app:title="历史记录有效期(天)"
-            app:defaultValue="30"
-            app:summary="30"
-            app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory
         app:title="关于"
         app:iconSpaceReserved="false">
 
