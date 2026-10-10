@@ -33,7 +33,7 @@
 | **项目名称** | 迁境 (MockLocation) |
 | **修改者** | shaua |
 | **包名** | `com.shaua.mocklocation` |
-| **版本** | 1.12.3 |
+| **版本** | 1.0.0 |
 | **协议** | GPL-3.0（遵循原项目协议） |
 | **核心改动** | 架构重构、功能精简、体验优化 |
 
@@ -107,8 +107,8 @@
 
 ### 4.3 百度地图安全码
 
-- 新安全码：`D086683CA79CD91EC9B844B5A7E9E609ABCE8892;com.shaua.mocklocation`
-- AK 配置于 `local.properties` 的 `MAPS_API_KEY`
+- 安全码格式为 `SHA1;com.shaua.mocklocation`，需在百度地图开放平台控制台配置
+- AK 与安全码均配置于 `local.properties`（不入库），请勿在公开仓库中泄露
 
 ---
 
@@ -224,7 +224,7 @@
 ### 9.1 项目完整性检查
 
 - 使用 Gradle Wrapper 执行 `assembleDebug` 构建验证
-- 构建产物：`app/build/outputs/apk/debug/迁境_1.12.3_arm64-v8a_debug.apk`（约 18.7 MB）
+- 构建产物：`app/build/outputs/apk/debug/迁境_1.0.0_arm64-v8a_debug.apk`（约 18.7 MB）
 - APK 结构验证通过：包含 `AndroidManifest.xml` 及多个 `classes.dex`
 - 说明：沙箱环境限制了 AGP 遥测服务（AnalyticsService / AndroidLocationsBuildService）对 `C:\Android\metrics\spool\` 的写入，导致构建进程以非零退出码结束，但所有编译打包任务（34 个）均成功完成（UP-TO-DATE），APK 有效
 
@@ -263,6 +263,14 @@
 | `README.md` | 中文版项目说明，记录 Fork 来源（影梭 GoGoGo by ZCShou）、功能特性、构建说明、项目结构、技术原理、许可证 |
 | `README.en.md` | 英文版项目说明，内容与中文版对应 |
 | 本文档 `MODIFICATION_LOG.md` | 专业修改记录文档，完整记录从原项目到本项目的所有修改内容与过程 |
+
+### 9.4 安全与版本调整（2026-10-11）
+
+| 变更项 | 说明 |
+|---|---|
+| 敏感信息清理 | 从 `MODIFICATION_LOG.md`、`docs/CHANGELOG.md`、`docs/build-log.md` 中移除百度地图 AK、签名证书 SHA1、安全码等敏感值，改为占位说明，避免公开仓库泄露 |
+| 版本号重置 | `versionCode` 1123 → 100，`versionName` 1.12.3 → 1.0.0，作为 Fork 后的首个正式版本 |
+| 反馈邮箱 | 设置页新增「反馈邮箱」选项（3556248756@qq.com），点击调用邮件应用发送反馈 |
 
 ---
 

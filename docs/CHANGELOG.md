@@ -1,6 +1,6 @@
 # 影梭 (MockLocation) 变更与部署指南
 
-> 包名：`com.shaua.mocklocation` | 版本：1.12.3 | 更新日期：2026-10-10
+> 包名：`com.shaua.mocklocation` | 版本：1.0.0 | 更新日期：2026-10-10
 
 ---
 
@@ -71,8 +71,8 @@
 | 证书文件 | `keystore/GoGoGo.jks` | `keystore/mocklocation.jks` |
 | Alias | `GoGoKey` | `mocklocation` |
 | 密码 | 硬编码于 build.gradle | 移至 `local.properties`（不入库） |
-| SHA1 | `32:2F:E6:05:...` | `D0:86:68:3C:A7:9C:D9:1E:C9:B8:44:B5:A7:E9:E6:09:AB:CE:88:92` |
-| 安全码 | — | `D086683CA79CD91EC9B844B5A7E9E609ABCE8892;com.shaua.mocklocation` |
+| SHA1 | `32:2F:E6:05:...` | 已重新生成（见 `local.properties`，不公开） |
+| 安全码 | — | `SHA1;com.shaua.mocklocation`（在百度地图控制台配置） |
 
 ### 2.5 设置页精简
 
@@ -165,14 +165,14 @@ cd GoGoGo
 # 1. 构建 debug APK
 .\gradlew.bat assembleDebug
 
-# 输出路径：app/build/outputs/apk/debug/Go_1.12.3_arm64-v8a_debug.apk
+# 输出路径：app/build/outputs/apk/debug/Go_1.0.0_arm64-v8a_debug.apk
 ```
 
 ### 4.4 真机安装与配置
 
 1. **安装 APK**：
    ```powershell
-   adb install -r app\build\outputs\apk\debug\Go_1.12.3_arm64-v8a_debug.apk
+   adb install -r app\build\outputs\apk\debug\Go_1.0.0_arm64-v8a_debug.apk
    ```
 
 2. **开启模拟位置权限**（必需）：
@@ -257,9 +257,9 @@ cd GoGoGo
 
 ### 百度地图 SDK
 
-- **AK**：`LoUBEZZ1m7ImYJEV9eBwzb0uWPOvmIiY`（已配置在 `local.properties`）
-- **安全码**：`D086683CA79CD91EC9B844B5A7E9E609ABCE8892;com.shaua.mocklocation`
-- **SHA1**：`D0:86:68:3C:A7:9C:D9:1E:C9:B8:44:B5:A7:E9:E6:09:AB:CE:88:92`
+- **AK**：已配置在 `local.properties` 的 `MAPS_API_KEY`（不公开）
+- **安全码**：`SHA1;com.shaua.mocklocation`（在百度地图控制台配置）
+- **SHA1**：签名证书的 SHA1（见 `local.properties`，不公开）
 - **包名**：`com.shaua.mocklocation`
 - **SDK 版本**：BaiduLBS_Android v7.6.5
 

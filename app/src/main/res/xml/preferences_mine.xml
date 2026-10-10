@@ -89,6 +89,12 @@
             app:iconSpaceReserved="false"/>
 
         <Preference
+            app:key="pref_email"
+            app:title="反馈邮箱"
+            app:summary="3556248756@qq.com"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
             app:key="pref_update"
             app:title="检测更新"
             app:summary="检查是否有新版本"

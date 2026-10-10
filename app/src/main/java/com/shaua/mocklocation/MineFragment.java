@@ -112,6 +112,23 @@ public class MineFragment extends PreferenceFragmentCompat {
             });
         }
 
+        // 反馈邮箱
+        Preference emailPref = findPreference("pref_email");
+        if (emailPref != null) {
+            emailPref.setOnPreferenceClickListener(pref -> {
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:3556248756@qq.com"));
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"3556248756@qq.com"});
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "迁境 问题反馈");
+                try {
+                    startActivity(emailIntent);
+                } catch (Exception e) {
+                    GoUtils.DisplayToast(requireContext(), "未找到邮件应用，请手动发送至 3556248756@qq.com");
+                }
+                return true;
+            });
+        }
+
         // 检测更新
         Preference updatePref = findPreference("pref_update");
         if (updatePref != null) {

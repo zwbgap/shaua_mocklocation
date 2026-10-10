@@ -103,11 +103,11 @@ MAPS_SAFE_CODE=你的安全码(SHA1;包名)
   - alias: `mocklocation`
   - 算法: RSA 2048 / SHA384withRSA
   - 有效期: 10,000 天
-  - SHA1: `D0:86:68:3C:A7:9C:D9:1E:C9:B8:44:B5:A7:E9:E6:09:AB:CE:88:92`
+  - SHA1: 已生成（见 `local.properties`，不公开）
 - 安全改进：签名密码从 `build.gradle` 移至 `local.properties`（已 gitignore）
 - `build.gradle` 通过 `keystoreProperties` 读取 `local.properties` 中的签名配置
 - debug 与 release 均使用同一签名（确保百度地图 SDK 在 debug 包中正常工作）
-- `MAPS_SAFE_CODE` 更新为 `D086683CA79CD91EC9B844B5A7E9E609ABCE8892;com.shaua.mocklocation`
+- `MAPS_SAFE_CODE` 更新为 `SHA1;com.shaua.mocklocation`（具体值见 `local.properties`，不公开）
 
 ### 代码优化与清理（2026-10-10）
 
