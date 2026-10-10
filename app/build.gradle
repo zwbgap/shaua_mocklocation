@@ -28,8 +28,8 @@ android {
         applicationId "com.shaua.mocklocation"
         minSdkVersion 27
         targetSdkVersion 34
-        versionCode 100
-        versionName '1.0.0' // https://semver.org/lang/zh-CN/
+        versionCode 101
+        versionName '1.0.1' // https://semver.org/lang/zh-CN/
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['zh', 'zh-rCN', 'en', 'en-rUS']
         ndk {
@@ -100,9 +100,9 @@ android {
             if (outputFile != null && outputFile.name.endsWith('.apk')) {
                 def fileName
                 if (variant.buildType.name == 'release') {
-                    fileName = "迁境_${defaultConfig.versionName}_arm64-v8a_release.apk"
+                    fileName = "qianjing_${defaultConfig.versionName}_arm64-v8a_release.apk"
                 } else {
-                    fileName = "迁境_${defaultConfig.versionName}_arm64-v8a_debug.apk"
+                    fileName = "qianjing_${defaultConfig.versionName}_arm64-v8a_debug.apk"
                 }
                 outputFileName=fileName
             }

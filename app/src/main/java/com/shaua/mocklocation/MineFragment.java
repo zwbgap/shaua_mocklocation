@@ -19,7 +19,6 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.shaua.mocklocation.utils.GoUtils;
-import com.shaua.mocklocation.utils.ShareUtils;
 
 import java.io.File;
 
@@ -86,10 +85,10 @@ public class MineFragment extends PreferenceFragmentCompat {
         };
         sp.registerOnSharedPreferenceChangeListener(themeListener);
 
-        // 版本号
-        Preference versionPref = findPreference("pref_version");
-        if (versionPref != null) {
-            versionPref.setSummary(GoUtils.getVersionName(requireContext()));
+        // 检测更新：摘要显示当前版本号
+        Preference updatePref = findPreference("pref_update");
+        if (updatePref != null) {
+            updatePref.setSummary("当前版本 " + GoUtils.getVersionName(requireContext()));
         }
 
         // 查看日志
@@ -101,36 +100,40 @@ public class MineFragment extends PreferenceFragmentCompat {
             });
         }
 
-        // 问题反馈
+        // 问题反馈：弹框提醒通过邮箱发送日志报告
         Preference feedbackPref = findPreference("pref_feedback");
         if (feedbackPref != null) {
             feedbackPref.setOnPreferenceClickListener(pref -> {
-                File file = new File(requireContext().getExternalFilesDir("Logs"),
+                final File logFile = new File(requireContext().getExternalFilesDir("Logs"),
                         com.shaua.mocklocation.GoApplication.LOG_FILE_NAME);
-                ShareUtils.shareFile(requireContext(), file, "问题反馈");
-                return true;
-            });
-        }
-
-        // 反馈邮箱
-        Preference emailPref = findPreference("pref_email");
-        if (emailPref != null) {
-            emailPref.setOnPreferenceClickListener(pref -> {
-                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-                emailIntent.setData(Uri.parse("mailto:3556248756@qq.com"));
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"3556248756@qq.com"});
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "迁境 问题反馈");
-                try {
-                    startActivity(emailIntent);
-                } catch (Exception e) {
-                    GoUtils.DisplayToast(requireContext(), "未找到邮件应用，请手动发送至 3556248756@qq.com");
-                }
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("问题反馈")
+                        .setMessage("请通过邮箱 3556248756@qq.com 发送日志报告。\n\n点击「发送」将打开邮件应用并附上日志文件。")
+                        .setPositiveButton("发送", (dialog, which) -> {
+                            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                            emailIntent.setData(Uri.parse("mailto:3556248756@qq.com"));
+                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"3556248756@qq.com"});
+                            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "迁境 问题反馈");
+                            if (logFile.exists()) {
+                                emailIntent.putExtra(Intent.EXTRA_STREAM,
+                                        androidx.core.content.FileProvider.getUriForFile(requireContext(),
+                                                requireContext().getPackageName() + ".fileProvider", logFile));
+                                emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            }
+                            try {
+                                startActivity(emailIntent);
+                            } catch (Exception e) {
+                                GoUtils.DisplayToast(requireContext(),
+                                        "未找到邮件应用，请手动将日志发送至 3556248756@qq.com");
+                            }
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
                 return true;
             });
         }
 
         // 检测更新
-        Preference updatePref = findPreference("pref_update");
         if (updatePref != null) {
             updatePref.setOnPreferenceClickListener(pref -> {
                 if (listener != null) {

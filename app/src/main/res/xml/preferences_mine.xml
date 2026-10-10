@@ -79,19 +79,13 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:title="反馈与更新"
+        app:title="关于"
         app:iconSpaceReserved="false">
 
         <Preference
             app:key="pref_feedback"
             app:title="问题反馈"
-            app:summary="分享日志文件给开发者"
-            app:iconSpaceReserved="false"/>
-
-        <Preference
-            app:key="pref_email"
-            app:title="反馈邮箱"
-            app:summary="3556248756@qq.com"
+            app:summary="通过邮箱发送日志报告"
             app:iconSpaceReserved="false"/>
 
         <Preference
@@ -103,29 +97,13 @@
         <Preference
             app:key="pref_contact"
             app:title="联系作者"
-            app:summary="前往项目主页"
+            app:summary="shaua · 前往项目主页"
             app:iconSpaceReserved="false"/>
 
         <Preference
             app:key="pref_dev"
             app:title="开发人员选项"
             app:summary="设置模拟位置应用"
-            app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:title="关于"
-        app:iconSpaceReserved="false">
-
-        <Preference
-            app:key="pref_version"
-            app:title="版本号"
-            app:iconSpaceReserved="false"/>
-
-        <Preference
-            app:key="pref_author"
-            app:title="开发者"
-            app:summary="shaua"
             app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
