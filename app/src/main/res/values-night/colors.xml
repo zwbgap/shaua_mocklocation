@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ========== Material 3 深色色板（青色系） ========== -->
+    <color name="md_primary">#FF52DBCB</color>
+    <color name="md_on_primary">#FF003832</color>
+    <color name="md_primary_container">#FF00514A</color>
+    <color name="md_on_primary_container">#FF73F8E8</color>
+    <color name="md_secondary">#FFB1CCC5</color>
+    <color name="md_on_secondary">#FF1B3530</color>
+    <color name="md_secondary_container">#FF324B46</color>
+    <color name="md_on_secondary_container">#FFCCE8E1</color>
+    <color name="md_tertiary">#FF90CCEA</color>
+    <color name="md_on_tertiary">#FF003449</color>
+    <color name="md_tertiary_container">#FF004C68</color>
+    <color name="md_on_tertiary_container">#FFC9E5FF</color>
+    <color name="md_error">#FFFFB4AB</color>
+    <color name="md_on_error">#FF690005</color>
+    <color name="md_error_container">#FF93000A</color>
+    <color name="md_on_error_container">#FFFFDAD6</color>
+    <color name="md_background">#FF191C1B</color>
+    <color name="md_on_background">#FFE1E3E0</color>
+    <color name="md_surface">#FF191C1B</color>
+    <color name="md_on_surface">#FFE1E3E0</color>
+    <color name="md_surface_variant">#FF3E4946</color>
+    <color name="md_on_surface_variant">#FFBEC9C5</color>
+    <color name="md_outline">#FF88938F</color>
+    <color name="md_outline_variant">#FF3E4946</color>
+    <color name="md_inverse_surface">#FFE1E3E0</color>
+    <color name="md_inverse_on_surface">#FF191C1B</color>
+    <color name="md_inverse_primary">#FF006A61</color>
+    <color name="md_surface_container_lowest">#FF141716</color>
+    <color name="md_surface_container_low">#FF1D201F</color>
+    <color name="md_surface_container">#FF212523</color>
+    <color name="md_surface_container_high">#FF2B2F2D</color>
+    <color name="md_surface_container_highest">#FF363A38</color>
+
+    <!-- 青色（深色） -->
+    <color name="teal_primary">#FF52DBCB</color>
+    <color name="teal_on_primary">#FF003832</color>
+    <color name="teal_primary_container">#FF00514A</color>
+    <color name="teal_on_primary_container">#FF73F8E8</color>
+    <color name="teal_secondary">#FFB1CCC5</color>
+    <color name="teal_secondary_container">#FF324B46</color>
+    <color name="teal_tertiary">#FF90CCEA</color>
+    <color name="teal_tertiary_container">#FF004C68</color>
+
+    <!-- 蓝色（深色） -->
+    <color name="blue_primary">#FF9ECAFF</color>
+    <color name="blue_on_primary">#FF003258</color>
+    <color name="blue_primary_container">#FF00497D</color>
+    <color name="blue_on_primary_container">#FFD1E4FF</color>
+    <color name="blue_secondary">#FFBBC7DB</color>
+    <color name="blue_secondary_container">#FF3B4858</color>
+    <color name="blue_tertiary">#FFD3BCE4</color>
+    <color name="blue_tertiary_container">#FF523F5F</color>
+
+    <!-- 紫色（深色） -->
+    <color name="purple_primary">#FFFFACEC</color>
+    <color name="purple_on_primary">#FF562151</color>
+    <color name="purple_primary_container">#FF723469</color>
+    <color name="purple_on_primary_container">#FFFFD7F3</color>
+    <color name="purple_secondary">#FFD9C2D6</color>
+    <color name="purple_secondary_container">#FF544352</color>
+    <color name="purple_tertiary">#FFF4B8A0</color>
+    <color name="purple_tertiary_container">#FF683F2F</color>
+
+    <!-- 橙色（深色） -->
+    <color name="orange_primary">#FFFFB77F</color>
+    <color name="orange_on_primary">#FF4D2600</color>
+    <color name="orange_primary_container">#FF6E3500</color>
+    <color name="orange_on_primary_container">#FFFFDCC1</color>
+    <color name="orange_secondary">#FFE4C26C</color>
+    <color name="orange_secondary_container">#FF584400</color>
+    <color name="orange_tertiary">#FFC7C2FF</color>
+    <color name="orange_tertiary_container">#FF53437C</color>
+
+    <!-- 兼容旧颜色名 -->
+    <color name="colorPrimary">#FF52DBCB</color>
+    <color name="colorPrimaryDark">#FF00514A</color>
+    <color name="colorAccent">#FF52DBCB</color>
+
+</resources>

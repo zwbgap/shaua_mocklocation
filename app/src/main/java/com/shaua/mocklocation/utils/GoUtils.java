@@ -29,26 +29,26 @@ import java.util.Locale;
 
 public class GoUtils {
 
-    /** 获取当前主题的强调色（colorAccent），用于对话框按钮等需随主题变色的场景 */
+    /** 获取当前主题的强调色，用于对话框按钮等需随主题变色的场景 */
     public static int getThemeAccentColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorAccent});
-        int color = a.getColor(0, 0xFF00897B);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimary});
+        int color = a.getColor(0, 0xFF006A61);
         a.recycle();
         return color;
     }
 
-    /** 获取当前主题的深色主色（colorPrimaryDark），用于状态栏/系统导航栏 */
+    /** 获取当前主题的深色主色，用于状态栏/系统导航栏 */
     public static int getThemePrimaryDarkColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorPrimaryDark});
-        int color = a.getColor(0, 0xFF00695C);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimaryContainer});
+        int color = a.getColor(0, 0xFF00514A);
         a.recycle();
         return color;
     }
 
-    /** 获取当前主题的主色（colorPrimary），用于 Toolbar、底部导航选中态等 */
+    /** 获取当前主题的主色，用于 Toolbar、底部导航选中态等 */
     public static int getThemePrimaryColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorPrimary});
-        int color = a.getColor(0, 0xFF008577);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimary});
+        int color = a.getColor(0, 0xFF006A61);
         a.recycle();
         return color;
     }

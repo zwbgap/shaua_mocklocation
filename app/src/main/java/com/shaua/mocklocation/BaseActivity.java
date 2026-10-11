@@ -12,9 +12,11 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // 应用主题配色
-        String themeColor = sp.getString("setting_theme_color", "teal");
-        setTheme(getThemeResId(themeColor));
+        // 应用主题配色；dynamic 表示跟随系统动态配色，由 Application 的 DynamicColors 处理
+        String themeColor = sp.getString("setting_theme_color", "dynamic");
+        if (!"dynamic".equals(themeColor)) {
+            setTheme(getThemeResId(themeColor));
+        }
 
         super.onCreate(savedInstanceState);
     }

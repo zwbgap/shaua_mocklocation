@@ -1,66 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- 应用主主题 -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    <!-- ========== Material 3 主主题 ========== -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- M3 颜色角色 -->
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorOnPrimary">@color/md_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_on_primary_container</item>
+        <item name="colorSecondary">@color/md_secondary</item>
+        <item name="colorOnSecondary">@color/md_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_tertiary</item>
+        <item name="colorOnTertiary">@color/md_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_on_tertiary_container</item>
+        <item name="colorError">@color/md_error</item>
+        <item name="colorOnError">@color/md_on_error</item>
+        <item name="colorErrorContainer">@color/md_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_on_error_container</item>
+        <item name="android:colorBackground">@color/md_background</item>
+        <item name="colorOnBackground">@color/md_on_background</item>
+        <item name="colorSurface">@color/md_surface</item>
+        <item name="colorOnSurface">@color/md_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
+        <item name="colorOutline">@color/md_outline</item>
+        <item name="colorOutlineVariant">@color/md_outline_variant</item>
+        <item name="colorSurfaceInverse">@color/md_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_inverse_on_surface</item>
+        <item name="colorPrimaryInverse">@color/md_inverse_primary</item>
+        <item name="colorSurfaceContainerLowest">@color/md_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_surface_container_highest</item>
+
+        <!-- 兼容旧属性 -->
+        <item name="colorPrimaryVariant">@color/md_primary</item>
+        <item name="colorSecondaryVariant">@color/md_secondary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/md_background</item>
+
+        <!-- 按钮样式 -->
         <item name="buttonStyle">@style/AppTheme.Button</item>
-        <item name="buttonBarStyle">@style/Widget.AppCompat.ButtonBar.AlertDialog</item>
-        <item name="buttonBarButtonStyle">@style/AppTheme.DialogButton</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
-        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
-        <item name="android:windowBackground">@color/white</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <!-- 无 ActionBar 主题（欢迎页、主界面使用） -->
+    <!-- ========== 预设配色：青色（默认） ========== -->
+    <style name="AppTheme.Teal" parent="AppTheme">
+        <item name="colorPrimary">@color/teal_primary</item>
+        <item name="colorOnPrimary">@color/teal_on_primary</item>
+        <item name="colorPrimaryContainer">@color/teal_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/teal_on_primary_container</item>
+        <item name="colorSecondary">@color/teal_secondary</item>
+        <item name="colorSecondaryContainer">@color/teal_secondary_container</item>
+        <item name="colorTertiary">@color/teal_tertiary</item>
+        <item name="colorTertiaryContainer">@color/teal_tertiary_container</item>
+    </style>
+
+    <!-- ========== 预设配色：蓝色 ========== -->
+    <style name="AppTheme.Blue" parent="AppTheme">
+        <item name="colorPrimary">@color/blue_primary</item>
+        <item name="colorOnPrimary">@color/blue_on_primary</item>
+        <item name="colorPrimaryContainer">@color/blue_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/blue_on_primary_container</item>
+        <item name="colorSecondary">@color/blue_secondary</item>
+        <item name="colorSecondaryContainer">@color/blue_secondary_container</item>
+        <item name="colorTertiary">@color/blue_tertiary</item>
+        <item name="colorTertiaryContainer">@color/blue_tertiary_container</item>
+    </style>
+
+    <!-- ========== 预设配色：紫色 ========== -->
+    <style name="AppTheme.Purple" parent="AppTheme">
+        <item name="colorPrimary">@color/purple_primary</item>
+        <item name="colorOnPrimary">@color/purple_on_primary</item>
+        <item name="colorPrimaryContainer">@color/purple_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/purple_on_primary_container</item>
+        <item name="colorSecondary">@color/purple_secondary</item>
+        <item name="colorSecondaryContainer">@color/purple_secondary_container</item>
+        <item name="colorTertiary">@color/purple_tertiary</item>
+        <item name="colorTertiaryContainer">@color/purple_tertiary_container</item>
+    </style>
+
+    <!-- ========== 预设配色：橙色 ========== -->
+    <style name="AppTheme.Orange" parent="AppTheme">
+        <item name="colorPrimary">@color/orange_primary</item>
+        <item name="colorOnPrimary">@color/orange_on_primary</item>
+        <item name="colorPrimaryContainer">@color/orange_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/orange_on_primary_container</item>
+        <item name="colorSecondary">@color/orange_secondary</item>
+        <item name="colorSecondaryContainer">@color/orange_secondary_container</item>
+        <item name="colorTertiary">@color/orange_tertiary</item>
+        <item name="colorTertiaryContainer">@color/orange_tertiary_container</item>
+    </style>
+
+    <!-- ========== 跟随系统动态配色（Material You） ========== -->
+    <style name="AppTheme.Dynamic" parent="AppTheme">
+        <!-- 动态配色由代码在运行时应用，此处仅占位 -->
+    </style>
+
+    <!-- 无 ActionBar 主题 -->
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- 预设配色主题：青、蓝、紫、橙 -->
-    <style name="AppTheme.Teal" parent="AppTheme">
-        <item name="colorPrimary">@color/theme_teal_primary</item>
-        <item name="colorPrimaryDark">@color/theme_teal_dark</item>
-        <item name="colorAccent">@color/theme_teal_accent</item>
-        <item name="android:statusBarColor">@color/theme_teal_dark</item>
-        <item name="android:navigationBarColor">@color/theme_teal_dark</item>
-    </style>
-
-    <style name="AppTheme.Blue" parent="AppTheme">
-        <item name="colorPrimary">@color/theme_blue_primary</item>
-        <item name="colorPrimaryDark">@color/theme_blue_dark</item>
-        <item name="colorAccent">@color/theme_blue_accent</item>
-        <item name="android:statusBarColor">@color/theme_blue_dark</item>
-        <item name="android:navigationBarColor">@color/theme_blue_dark</item>
-    </style>
-
-    <style name="AppTheme.Purple" parent="AppTheme">
-        <item name="colorPrimary">@color/theme_purple_primary</item>
-        <item name="colorPrimaryDark">@color/theme_purple_dark</item>
-        <item name="colorAccent">@color/theme_purple_accent</item>
-        <item name="android:statusBarColor">@color/theme_purple_dark</item>
-        <item name="android:navigationBarColor">@color/theme_purple_dark</item>
-    </style>
-
-    <style name="AppTheme.Orange" parent="AppTheme">
-        <item name="colorPrimary">@color/theme_orange_primary</item>
-        <item name="colorPrimaryDark">@color/theme_orange_dark</item>
-        <item name="colorAccent">@color/theme_orange_accent</item>
-        <item name="android:statusBarColor">@color/theme_orange_dark</item>
-        <item name="android:navigationBarColor">@color/theme_orange_dark</item>
-    </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
 
     <!-- 点击波纹效果（白色背景上的灰色波纹） -->
-    <style name="RippleWhite" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="RippleWhite" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:colorControlHighlight">#C8C9CA</item>
         <item name="android:radius">14dp</item>
     </style>
@@ -72,18 +124,8 @@
     </style>
 
     <!-- 按钮样式 -->
-    <style name="AppTheme.Button" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/colorAccent</item>
-        <item name="android:textColor">@android:color/white</item>
-    </style>
-
-    <!-- 对话框按钮样式：无边框，文字色随主题 -->
-    <style name="AppTheme.DialogButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
-        <item name="android:textColor">?attr/colorAccent</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:minWidth">64dp</item>
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">12dp</item>
+    <style name="AppTheme.Button" parent="Widget.Material3.Button">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
     </style>
 
 </resources>
