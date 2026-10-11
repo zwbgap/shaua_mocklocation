@@ -1,42 +1,66 @@
 # 影梭 (MockLocation) 变更与部署指南
 
-> 包名：`com.shaua.mocklocation` | 版本：1.0.2 | 更新日期：2026-10-11
-
----
-
-## 一、现有功能点
-
-### 核心功能
-| 功能 | 说明 | 状态 |
-|---|---|---|
-| 模拟定位 | 通过 `LocationManager` 同时注入 GPS + NETWORK Provider，无需 ROOT | ✅ |
-| 百度地图选点 | 地图展示、单击/长按/双击交互、普通/卫星图切换 | ✅ |
-| POI 逆地理编码 | 长按地图弹出地址信息（保存/复制/分享/传送） | ✅ |
-| POI 联想搜索 | 百度搜索建议，支持全国/城市搜索 | ✅ |
-| 手动输入坐标 | 支持 BD09 / WGS84 坐标系输入 | ✅ |
-| 运行中更新位置 | 模拟运行时选新点，位置实时更新 | ✅ |
-| 收藏位置 | SQLite 存储收藏地点，支持增删改查、搜索、有效期归档 | ✅ |
-| 随机偏移 | 仅对收藏位置生效，经纬度最大偏移可配置 | ✅ |
-
-### 辅助功能
-| 功能 | 说明 | 状态 |
-|---|---|---|
-| 海拔高度配置 | 设置项可配置模拟定位的海拔 | ✅ |
-| 版本检测 | 检查 GitHub Releases 最新版本并下载安装 | ✅ |
-| 用户协议/隐私 | 首次启动弹窗，同意后进入 | ✅ |
-| 权限管理 | 运行时权限申请（定位、存储等） | ✅ |
-| 日志记录 | XLog 写入文件，支持开关 | ✅ |
-
-### 已移除功能
-| 功能 | 说明 |
-|---|---|
-| 悬浮摇杆 | 圆盘摇杆 + 八方向按键摇杆（控制移动） |
-| 模拟移动 | 步行/跑步/自行车速度切换 |
-| 方向传感器 | 地图定位图层方向显示 |
+> 包名：`com.shaua.mocklocation` | 版本：1.0.4 | 更新日期：2026-10-12
 
 ---
 
 ## 二、版本变更记录
+
+### v1.0.4（2026-10-12）
+
+#### Material 3 主题重构
+| 变更项 | 说明 |
+|---|---|
+| 全量 M3 语义化适配 | 所有硬编码颜色（`#212121`、`#9E9E9E` 等）替换为 Material 3 语义化属性（`colorOnSurface`、`colorOnSurfaceVariant`、`colorOutline` 等） |
+| Drawable 资源适配 | 12 个 drawable 背景改用 `?attr/colorSurface`、`colorSurfaceVariant`、`colorOutlineVariant` 等主题属性 |
+| 状态栏统一 | `statusBarColor` 改为 `colorPrimary`，消除白底割裂感，自动适配明暗模式图标颜色 |
+| 系统导航栏适配 | `navigationBarColor` 改为 `colorSurface`，与底部导航栏融为一体 |
+| 对话框主题 | `AppBarOverlay`/`PopupOverlay` 改为 Material 3 覆盖主题，支持昼夜模式 |
+
+#### 底部导航栏优化
+| 变更项 | 说明 |
+|---|---|
+| 高度调整 | 56dp → 80dp，图标文字不再错位 |
+| 顶部分隔线 | 新增 `colorOutlineVariant` 顶部分隔线 |
+| 系统导航栏适配 | 动态添加底部 padding，适配系统导航栏 inset |
+| 搜索时隐藏 | 展开搜索时自动隐藏底部导航栏，扩大搜索区域 |
+
+#### 应用图标切换
+| 变更项 | 说明 |
+|---|---|
+| 5 款图标 | 极简定位针、指南针定位针、纸飞机定位针、科技坐标网格、默认图标 |
+| 动态切换 | 通过 `activity-alias` + `PackageManager` 实现运行时切换，无需重启 |
+| 设置入口 | 「设置 → 应用图标」选择，重启后生效 |
+
+#### 缓存与内存优化
+| 变更项 | 说明 |
+|---|---|
+| 搜索历史过期清理 | 启动时自动清理超过 30 天的搜索历史记录 |
+| 更新 APK 残留清理 | 应用启动时自动清理 `Updates/` 目录下的旧安装包 |
+| 一键清理缓存 | 设置页新增「清理缓存」，清理日志、搜索历史、地图瓦片缓存、残留安装包 |
+| Release 日志精简 | Release 版本日志级别降为 `WARN`，移除边框/调用栈，减少日志体积 |
+
+#### 弹窗 UI 样式统一
+| 变更项 | 说明 |
+|---|---|
+| 主按钮样式统一 | 新增 `bg_btn_primary.xml`（主题色背景，6dp 圆角，扁平无 elevation） |
+| 次按钮样式统一 | 4 个自定义弹窗（协议/隐私/更新/坐标输入）的两个按钮统一为相同样式 |
+| Material Button tint 修复 | 添加 `backgroundTint="@null"`，解决 Material 默认 tint 覆盖自定义背景的问题 |
+| 标题样式统一 | 标题字号统一 18sp，底部分隔线统一 `colorOutlineVariant` |
+
+#### 16KB 页面兼容
+| 变更项 | 说明 |
+|---|---|
+| 百度地图 SDK 对齐 | `extractNativeLibs="true"` + `useLegacyPackaging=true`，解决 libindoor.so 未按 16KB 对齐的问题 |
+
+### v1.0.3（2026-10-12）
+
+#### Material 3 主题适配
+| 变更项 | 说明 |
+|---|---|
+| 主题重构 | 引入 Material 3 DayNight 主题，四套预设配色（青/蓝/紫/橙） |
+| 颜色语义化 | 硬编码颜色替换为 M3 语义属性，支持深色模式 |
+| 状态栏/导航栏 | 统一适配主题色，消除割裂感 |
 
 ### v1.0.2（2026-10-11）
 
@@ -192,14 +216,14 @@ cd GoGoGo
 # 1. 构建 debug APK
 .\gradlew.bat assembleDebug
 
-# 输出路径：app/build/outputs/apk/debug/qianjing_1.0.2_arm64-v8a_debug.apk
+# 输出路径：app/build/outputs/apk/debug/qianjing_1.0.4_arm64-v8a_debug.apk
 ```
 
 ### 4.4 真机安装与配置
 
 1. **安装 APK**：
    ```powershell
-   adb install -r app\build\outputs\apk\debug\qianjing_1.0.2_arm64-v8a_debug.apk
+   adb install -r app\build\outputs\apk\debug\qianjing_1.0.4_arm64-v8a_debug.apk
    ```
 
 2. **开启模拟位置权限**（必需）：

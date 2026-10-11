@@ -24,7 +24,7 @@
 
     <!-- 欢迎页 -->
     <string name="welcome_btn_txt">进入应用</string>
-    <string name="app_btn_agree">同意并继续</string>
+    <string name="app_btn_agree">同意</string>
     <string name="app_btn_disagree">不同意</string>
 
     <!-- 定位相关参数 -->

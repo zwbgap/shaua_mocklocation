@@ -22,6 +22,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.shaua.mocklocation.database.DataBaseHistorySearch;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -316,5 +319,156 @@ public class GoUtils {
             void onTick(long millisUntilFinished);
             void onFinish();
         }
+    }
+
+    /* ============================== 缓存清理 相关 ============================== */
+
+    /**
+     * 计算应用可清理缓存的总大小（字节）
+     * 包括：内部缓存、外部缓存、日志文件、更新安装包
+     */
+    public static long getCacheSize(Context context) {
+        long size = 0;
+        size += getDirSize(context.getCacheDir());
+        File externalCache = context.getExternalCacheDir();
+        if (externalCache != null) size += getDirSize(externalCache);
+        File logDir = context.getExternalFilesDir("Logs");
+        if (logDir != null) size += getDirSize(logDir);
+        File updateDir = context.getExternalFilesDir("Updates");
+        if (updateDir != null) size += getDirSize(updateDir);
+        return size;
+    }
+
+    /**
+     * 清理应用缓存
+     * 包括：内部缓存、外部缓存、日志文件、更新安装包、搜索历史
+     * @return 实际清理的字节数
+     */
+    public static long clearCache(Context context) {
+        long before = getCacheSize(context);
+
+        // 清理内部缓存（含百度地图瓦片缓存）
+        deleteDirContents(context.getCacheDir());
+        // 清理外部缓存
+        File externalCache = context.getExternalCacheDir();
+        if (externalCache != null) deleteDirContents(externalCache);
+        // 清理日志文件
+        File logDir = context.getExternalFilesDir("Logs");
+        if (logDir != null) deleteDirContents(logDir);
+        // 清理更新安装包
+        File updateDir = context.getExternalFilesDir("Updates");
+        if (updateDir != null) deleteDirContents(updateDir);
+        // 清理搜索历史
+        try {
+            DataBaseHistorySearch dbHelper = new DataBaseHistorySearch(context.getApplicationContext());
+            DataBaseHistorySearch.deleteAll(dbHelper.getWritableDatabase());
+            dbHelper.close();
+        } catch (Exception e) {
+            // 忽略
+        }
+
+        long after = getCacheSize(context);
+        return before - after;
+    }
+
+    /**
+     * 格式化字节数为可读字符串（如 1.2 MB）
+     */
+    public static String formatFileSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format(Locale.getDefault(), "%.1f KB", bytes / 1024.0);
+        if (bytes < 1024 * 1024 * 1024) return String.format(Locale.getDefault(), "%.1f MB", bytes / (1024.0 * 1024));
+        return String.format(Locale.getDefault(), "%.2f GB", bytes / (1024.0 * 1024 * 1024));
+    }
+
+    /** 递归计算目录大小 */
+    private static long getDirSize(File dir) {
+        if (dir == null || !dir.exists()) return 0;
+        long size = 0;
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    size += getDirSize(file);
+                } else {
+                    size += file.length();
+                }
+            }
+        }
+        return size;
+    }
+
+    /** 删除目录下所有内容，保留目录本身 */
+    private static void deleteDirContents(File dir) {
+        if (dir == null || !dir.exists()) return;
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirContents(file);
+                    file.delete();
+                } else {
+                    file.delete();
+                }
+            }
+        }
+    }
+
+    /* ============================== 应用图标切换 相关 ============================== */
+
+    private static final String PKG = "com.shaua.mocklocation";
+    private static final String[] ALIAS_COMPONENTS = {
+            PKG + ".WelcomeActivityAliasDefault",
+            PKG + ".WelcomeActivityAliasIcon1",
+            PKG + ".WelcomeActivityAliasIcon2",
+            PKG + ".WelcomeActivityAliasIcon3",
+            PKG + ".WelcomeActivityAliasIcon4"
+    };
+
+    /**
+     * 切换应用桌面图标
+     * @param context 上下文
+     * @param iconValue 图标标识：default / icon1 / icon2 / icon3 / icon4
+     */
+    public static void switchAppIcon(Context context, String iconValue) {
+        int targetIndex;
+        switch (iconValue) {
+            case "icon1": targetIndex = 1; break;
+            case "icon2": targetIndex = 2; break;
+            case "icon3": targetIndex = 3; break;
+            case "icon4": targetIndex = 4; break;
+            default: targetIndex = 0; break;
+        }
+        PackageManager pm = context.getPackageManager();
+        // 禁用所有别名入口
+        for (int i = 0; i < ALIAS_COMPONENTS.length; i++) {
+            pm.setComponentEnabledSetting(
+                    new android.content.ComponentName(context, ALIAS_COMPONENTS[i]),
+                    i == targetIndex
+                            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
+    }
+
+    /**
+     * 获取当前启用的图标标识（用于回显）
+     */
+    public static String getCurrentAppIcon(Context context) {
+        PackageManager pm = context.getPackageManager();
+        for (int i = 0; i < ALIAS_COMPONENTS.length; i++) {
+            int state = pm.getComponentEnabledSetting(
+                    new android.content.ComponentName(context, ALIAS_COMPONENTS[i]));
+            if (state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                switch (i) {
+                    case 1: return "icon1";
+                    case 2: return "icon2";
+                    case 3: return "icon3";
+                    case 4: return "icon4";
+                    default: return "default";
+                }
+            }
+        }
+        return "default";
     }
 }

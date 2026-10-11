@@ -17,4 +17,20 @@
         <item>orange</item>
     </string-array>
 
+    <!-- 应用图标 -->
+    <string-array name="app_icon_entries">
+        <item>默认</item>
+        <item>极简定位针</item>
+        <item>指南针定位针</item>
+        <item>纸飞机定位针</item>
+        <item>科技坐标网格</item>
+    </string-array>
+    <string-array name="app_icon_values">
+        <item>default</item>
+        <item>icon1</item>
+        <item>icon2</item>
+        <item>icon3</item>
+        <item>icon4</item>
+    </string-array>
+
 </resources>

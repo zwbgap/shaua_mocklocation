@@ -124,9 +124,10 @@
             android:layout_height="42dp"
             android:layout_weight="1"
             android:layout_marginEnd="6dp"
-            android:background="@drawable/bg_btn_secondary"
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="@null"
             android:text="@string/input_position_cancel"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />
 
         <Button
@@ -135,7 +136,8 @@
             android:layout_height="42dp"
             android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:backgroundTint="?attr/colorPrimary"
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="@null"
             android:text="@string/input_position_ok"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />

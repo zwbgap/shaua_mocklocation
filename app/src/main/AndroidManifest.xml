@@ -84,13 +84,82 @@
         <activity
             android:name=".WelcomeActivity"
             android:exported="true"
-            android:theme="@style/AppTheme.NoActionBar"
-            >
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <!-- 默认图标入口 -->
+        <activity-alias
+            android:name=".WelcomeActivityAliasDefault"
+            android:targetActivity=".WelcomeActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <!-- 图标1：极简定位针 -->
+        <activity-alias
+            android:name=".WelcomeActivityAliasIcon1"
+            android:targetActivity=".WelcomeActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_icon1"
+            android:roundIcon="@mipmap/ic_launcher_icon1"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 图标2：指南针定位针 -->
+        <activity-alias
+            android:name=".WelcomeActivityAliasIcon2"
+            android:targetActivity=".WelcomeActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_icon2"
+            android:roundIcon="@mipmap/ic_launcher_icon2"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 图标3：纸飞机变定位针 -->
+        <activity-alias
+            android:name=".WelcomeActivityAliasIcon3"
+            android:targetActivity=".WelcomeActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_icon3"
+            android:roundIcon="@mipmap/ic_launcher_icon3"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 图标4：科技坐标网格 -->
+        <activity-alias
+            android:name=".WelcomeActivityAliasIcon4"
+            android:targetActivity=".WelcomeActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_icon4"
+            android:roundIcon="@mipmap/ic_launcher_icon4"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".MainActivity"

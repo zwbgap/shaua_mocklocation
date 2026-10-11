@@ -3,22 +3,31 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:paddingStart="20dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="16dp">
 
     <TextView
         android:id="@+id/update_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_marginBottom="16dp"
+        android:paddingBottom="12dp"
         android:text="@string/update_title"
         android:textColor="?attr/colorOnSurface"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:orientation="vertical"
         android:background="?attr/colorSurfaceVariant"
         android:padding="12dp">
@@ -92,26 +101,29 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:gravity="end"
+        android:gravity="center"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/update_ignore"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:minWidth="80dp"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="@null"
             android:text="@string/update_ignore"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />
 
         <Button
             android:id="@+id/update_agree"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:minWidth="100dp"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="@null"
             android:text="@string/update_download"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />

@@ -57,4 +57,30 @@ public class DataBaseHistorySearch extends SQLiteOpenHelper {
             XLog.e("DATABASE: insert error");
         }
     }
+
+    /**
+     * 清理超过指定天数的搜索历史记录
+     * @param expirationDays 保留天数，超过此天数的记录将被删除
+     */
+    public static void deleteExpired(SQLiteDatabase sqLiteDatabase, int expirationDays) {
+        try {
+            long expirationSeconds = (long) expirationDays * 24 * 60 * 60;
+            long threshold = System.currentTimeMillis() / 1000 - expirationSeconds;
+            sqLiteDatabase.delete(TABLE_NAME, DB_COLUMN_TIMESTAMP + " < ?",
+                    new String[]{String.valueOf(threshold)});
+        } catch (Exception e) {
+            XLog.e("DATABASE: deleteExpired error");
+        }
+    }
+
+    /**
+     * 删除全部搜索历史记录
+     */
+    public static void deleteAll(SQLiteDatabase sqLiteDatabase) {
+        try {
+            sqLiteDatabase.delete(TABLE_NAME, null, null);
+        } catch (Exception e) {
+            XLog.e("DATABASE: deleteAll error");
+        }
+    }
 }

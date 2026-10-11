@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
@@ -81,9 +82,22 @@ public class MineFragment extends PreferenceFragmentCompat {
         themeListener = (sharedPrefs, key) -> {
             if ("setting_theme_color".equals(key)) {
                 requireActivity().recreate();
+            } else if ("setting_app_icon".equals(key)) {
+                String iconValue = sharedPrefs.getString(key, "default");
+                GoUtils.switchAppIcon(requireContext(), iconValue);
+                GoUtils.DisplayToast(requireContext(), "图标已切换，桌面图标可能需要稍后刷新");
             }
         };
         sp.registerOnSharedPreferenceChangeListener(themeListener);
+
+        // 回显当前图标（兼容从旧版本升级的情况）
+        ListPreference iconPref = findPreference("setting_app_icon");
+        if (iconPref != null) {
+            String current = GoUtils.getCurrentAppIcon(requireContext());
+            if (!current.equals(iconPref.getValue())) {
+                iconPref.setValue(current);
+            }
+        }
 
         // 检测更新：摘要显示当前版本号
         Preference updatePref = findPreference("pref_update");
@@ -100,13 +114,38 @@ public class MineFragment extends PreferenceFragmentCompat {
             });
         }
 
+        // 清理缓存：显示当前缓存大小，确认后执行清理
+        Preference clearCachePref = findPreference("pref_clear_cache");
+        if (clearCachePref != null) {
+            updateCacheSummary(clearCachePref);
+            clearCachePref.setOnPreferenceClickListener(pref -> {
+                long cacheSize = GoUtils.getCacheSize(requireContext());
+                String sizeStr = GoUtils.formatFileSize(cacheSize);
+                androidx.appcompat.app.AlertDialog dlg = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("清理缓存")
+                        .setMessage("当前可清理缓存约 " + sizeStr + "\n\n将清理：日志文件、搜索历史、地图瓦片缓存、残留安装包\n\n确定要清理吗？")
+                        .setPositiveButton("清理", (dialog, which) -> {
+                            long freed = GoUtils.clearCache(requireContext());
+                            String freedStr = GoUtils.formatFileSize(freed);
+                            GoUtils.DisplayToast(requireContext(), "已清理 " + freedStr);
+                            updateCacheSummary(clearCachePref);
+                        })
+                        .setNegativeButton("取消", null)
+                        .create();
+                dlg.show();
+                dlg.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(requireContext()));
+                dlg.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(requireContext()));
+                return true;
+            });
+        }
+
         // 问题反馈：弹框提醒通过邮箱发送日志报告
         Preference feedbackPref = findPreference("pref_feedback");
         if (feedbackPref != null) {
             feedbackPref.setOnPreferenceClickListener(pref -> {
                 final File logFile = new File(requireContext().getExternalFilesDir("Logs"),
                         com.shaua.mocklocation.GoApplication.LOG_FILE_NAME);
-                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                androidx.appcompat.app.AlertDialog fbDlg = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                         .setTitle("问题反馈")
                         .setMessage("请通过邮箱 3556248756@qq.com 发送日志报告。\n\n点击「发送」将打开邮件应用并附上日志文件。")
                         .setPositiveButton("发送", (dialog, which) -> {
@@ -128,7 +167,10 @@ public class MineFragment extends PreferenceFragmentCompat {
                             }
                         })
                         .setNegativeButton("取消", null)
-                        .show();
+                        .create();
+                fbDlg.show();
+                fbDlg.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(requireContext()));
+                fbDlg.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(requireContext()));
                 return true;
             });
         }
@@ -169,6 +211,21 @@ public class MineFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Preference clearCachePref = findPreference("pref_clear_cache");
+        if (clearCachePref != null) {
+            updateCacheSummary(clearCachePref);
+        }
+    }
+
+    private void updateCacheSummary(Preference pref) {
+        long cacheSize = GoUtils.getCacheSize(requireContext());
+        String sizeStr = GoUtils.formatFileSize(cacheSize);
+        pref.setSummary("当前缓存 " + sizeStr + "（日志、搜索历史、地图缓存、安装包）");
     }
 
     @Override

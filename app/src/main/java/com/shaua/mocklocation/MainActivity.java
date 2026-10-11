@@ -841,6 +841,8 @@ public class MainActivity extends BaseActivity
         try {
             DataBaseHistorySearch dbHistory = new DataBaseHistorySearch(getApplicationContext());
             mSearchHistoryDB = dbHistory.getWritableDatabase();
+            // 清理超过 30 天的搜索历史记录，避免数据库无限增长
+            DataBaseHistorySearch.deleteExpired(mSearchHistoryDB, 30);
         } catch (Exception e) {
             XLog.e("ERROR: sqlite init error");
         }

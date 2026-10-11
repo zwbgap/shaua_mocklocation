@@ -32,6 +32,9 @@ public class GoApplication extends Application {
         // Material You 动态配色（Android 12+，将用户壁纸配色应用到应用）
         DynamicColors.applyToActivitiesIfAvailable(this);
 
+        // 清理上一版本残留的更新安装包
+        cleanUpdateApkFiles();
+
         initXlog();
 
         // 百度地图 7.5 开始，要求必须同意隐私政策，默认为false
@@ -47,26 +50,62 @@ public class GoApplication extends Application {
 
     /**
      * Initialize XLog.
+     * Release 版本仅记录 WARN 及以上级别，且不输出线程信息/调用栈/边框以减小日志体积
+     * Debug 版本记录全部级别并启用详细调试信息
+     * 用户可在设置中关闭日志
      */
     private void initXlog() {
         File logPath = getExternalFilesDir("Logs");
-        if (logPath != null) {
-            LogConfiguration config = new LogConfiguration.Builder()
-                    .logLevel(LogLevel.ALL)
-                    .tag(APP_NAME)                                         // 指定 TAG，默认为 "X-LOG"
-                    .enableThreadInfo()                                    // 允许打印线程信息，默认禁止
-                    .enableStackTrace(2)                                   // 允许打印深度为 2 的调用栈信息，默认禁止
-                    .enableBorder()                                        // 允许打印日志边框，默认禁止
-                    .build();
+        if (logPath == null) return;
 
-            Printer consolePrinter = new ConsolePrinter();                  // 通过 System.out 打印日志到控制台的打印器
-            Printer filePrinter = new FilePrinter                           // 打印日志到文件的打印器
-                    .Builder(logPath.getPath())                             // 指定保存日志文件的路径
-                    .fileNameGenerator(new ChangelessFileNameGenerator(LOG_FILE_NAME))         // 指定日志文件名生成器，默认为 ChangelessFileNameGenerator("log")
-                    .backupStrategy(new NeverBackupStrategy())              // 指定日志文件备份策略，默认为 FileSizeBackupStrategy(1024 * 1024)
-                    .cleanStrategy(new FileLastModifiedCleanStrategy(MAX_TIME))     // 指定日志文件清除策略，默认为 NeverCleanStrategy()
-                    .build();
-            XLog.init(config, consolePrinter, filePrinter);
+        // 检查用户是否关闭了日志
+        boolean logOff = androidx.preference.PreferenceManager
+                .getDefaultSharedPreferences(this)
+                .getBoolean("setting_log_off", false);
+
+        LogConfiguration.Builder configBuilder = new LogConfiguration.Builder()
+                .tag(APP_NAME);
+
+        if (logOff) {
+            configBuilder.logLevel(LogLevel.NONE);
+        } else if (BuildConfig.DEBUG) {
+            // Debug：全量日志 + 详细调试信息
+            configBuilder.logLevel(LogLevel.ALL)
+                    .enableThreadInfo()
+                    .enableStackTrace(2)
+                    .enableBorder();
+        } else {
+            // Release：仅警告及以上，减少日志体积
+            configBuilder.logLevel(LogLevel.WARN);
+        }
+
+        LogConfiguration config = configBuilder.build();
+
+        Printer consolePrinter = new ConsolePrinter();
+        Printer filePrinter = new FilePrinter
+                .Builder(logPath.getPath())
+                .fileNameGenerator(new ChangelessFileNameGenerator(LOG_FILE_NAME))
+                .backupStrategy(new NeverBackupStrategy())
+                .cleanStrategy(new FileLastModifiedCleanStrategy(MAX_TIME))
+                .build();
+        XLog.init(config, consolePrinter, filePrinter);
+    }
+
+    /**
+     * 清理更新目录中残留的 APK 安装包
+     * 更新安装完成并启动新版本后，旧的下载文件不再需要
+     */
+    private void cleanUpdateApkFiles() {
+        File updatesDir = getExternalFilesDir("Updates");
+        if (updatesDir != null && updatesDir.exists()) {
+            File[] files = updatesDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.getName().endsWith(".apk")) {
+                        file.delete();
+                    }
+                }
+            }
         }
     }
 }

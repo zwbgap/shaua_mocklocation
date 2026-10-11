@@ -18,6 +18,20 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:title="外观"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            app:key="setting_app_icon"
+            app:title="应用图标"
+            app:summary="选择桌面图标样式"
+            app:defaultValue="default"
+            app:entries="@array/app_icon_entries"
+            app:entryValues="@array/app_icon_values"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:title="日志"
         app:iconSpaceReserved="false">
 
@@ -32,6 +46,12 @@
             app:key="pref_view_log"
             app:title="查看日志"
             app:summary="查看应用运行日志记录"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            app:key="pref_clear_cache"
+            app:title="清理缓存"
+            app:summary="清理日志、搜索历史、地图缓存及残留安装包"
             app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
