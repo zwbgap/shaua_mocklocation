@@ -29,26 +29,42 @@ import java.util.Locale;
 
 public class GoUtils {
 
-    /** 获取当前主题的强调色（colorAccent），用于对话框按钮等需随主题变色的场景 */
+    /** 获取当前主题的强调色，用于对话框按钮等需随主题变色的场景 */
     public static int getThemeAccentColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorAccent});
-        int color = a.getColor(0, 0xFF00897B);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimary});
+        int color = a.getColor(0, 0xFF006A61);
         a.recycle();
         return color;
     }
 
-    /** 获取当前主题的深色主色（colorPrimaryDark），用于状态栏/系统导航栏 */
+    /** 获取当前主题的深色主色，用于状态栏/系统导航栏 */
     public static int getThemePrimaryDarkColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorPrimaryDark});
-        int color = a.getColor(0, 0xFF00695C);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimaryContainer});
+        int color = a.getColor(0, 0xFF00514A);
         a.recycle();
         return color;
     }
 
-    /** 获取当前主题的主色（colorPrimary），用于 Toolbar、底部导航选中态等 */
+    /** 获取当前主题的主色，用于 Toolbar、底部导航选中态等 */
     public static int getThemePrimaryColor(Context context) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{androidx.appcompat.R.attr.colorPrimary});
-        int color = a.getColor(0, 0xFF008577);
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorPrimary});
+        int color = a.getColor(0, 0xFF006A61);
+        a.recycle();
+        return color;
+    }
+
+    /** 获取当前主题的 surface 上的次要文字色，用于对话框次要按钮等 */
+    public static int getThemeOnSurfaceVariantColor(Context context) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorOnSurfaceVariant});
+        int color = a.getColor(0, 0xFF757575);
+        a.recycle();
+        return color;
+    }
+
+    /** 获取当前主题的主色上的文字色，用于 Toolbar 标题等 */
+    public static int getThemeOnPrimaryColor(Context context) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorOnPrimary});
+        int color = a.getColor(0, 0xFFFFFFFF);
         a.recycle();
         return color;
     }
@@ -222,7 +238,7 @@ public class GoUtils {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     //显示开启GPS的提示
@@ -244,7 +260,7 @@ public class GoUtils {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     // 提醒关闭 WIFI 的弹框
@@ -265,7 +281,7 @@ public class GoUtils {
         dialog.show();
         // 强制设置按钮文字颜色，避免主题导致按钮不可见
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     public static  void DisplayToast(Context context, String str) {

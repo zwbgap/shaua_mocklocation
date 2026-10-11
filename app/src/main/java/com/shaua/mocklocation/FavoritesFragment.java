@@ -120,16 +120,19 @@ public class FavoritesFragment extends Fragment {
     }
 
     private void deleteFavorite(FavoriteLocation loc) {
-        new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setTitle("警告")
                 .setMessage("确定要删除「" + loc.getName() + "」吗?")
-                .setPositiveButton("确定", (dialog, which) -> {
+                .setPositiveButton("确定", (d, which) -> {
                     locationRepository.deleteById(loc.getId());
                     loadFavorites();
                     GoUtils.DisplayToast(requireContext(), "已删除");
                 })
                 .setNegativeButton("取消", null)
-                .show();
+                .create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(requireContext()));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(requireContext()));
     }
 
     private class FavoritesAdapter extends BaseAdapter {

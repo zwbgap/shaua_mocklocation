@@ -6,7 +6,6 @@ import android.view.MenuItem;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.shaua.mocklocation.utils.GoUtils;
@@ -20,7 +19,7 @@ import java.io.FileWriter;
 /**
  * 日志查看页面
  */
-public class LogViewerActivity extends AppCompatActivity {
+public class LogViewerActivity extends BaseActivity {
 
     private TextView logText;
     private ScrollView scrollView;

@@ -22,9 +22,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -149,6 +151,9 @@ public class MainActivity extends BaseActivity
     private LinearLayout mHistoryLayout;
     private MenuItem searchItem;
     private SuggestionSearch mSuggestionSearch;
+    /*============================== 底部导航栏 相关 ==============================*/
+    private com.google.android.material.bottomnavigation.BottomNavigationView bottomNav;
+    private FrameLayout contentContainer;
     /*============================== 更新 相关 ==============================*/
     private DownloadManager mDownloadManager = null;
     private long mDownloadId;
@@ -281,12 +286,26 @@ public class MainActivity extends BaseActivity
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 mSearchLayout.setVisibility(View.INVISIBLE);
                 mHistoryLayout.setVisibility(View.INVISIBLE);
+                // 恢复底部导航栏
+                if (bottomNav != null) bottomNav.setVisibility(View.VISIBLE);
+                if (contentContainer != null) {
+                    ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) contentContainer.getLayoutParams();
+                    lp.bottomMargin = (int) (80 * getResources().getDisplayMetrics().density);
+                    contentContainer.setLayoutParams(lp);
+                }
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
                 mSearchLayout.setVisibility(View.INVISIBLE);
+                // 隐藏底部导航栏，避免遮挡搜索面板
+                if (bottomNav != null) bottomNav.setVisibility(View.GONE);
+                if (contentContainer != null) {
+                    ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) contentContainer.getLayoutParams();
+                    lp.bottomMargin = 0;
+                    contentContainer.setLayoutParams(lp);
+                }
                 List<Map<String, Object>> data = getSearchHistory();
                 if (!data.isEmpty()) {
                     SimpleAdapter simAdapt = new SimpleAdapter(
@@ -520,13 +539,6 @@ public class MainActivity extends BaseActivity
         EditText dialog_lat = view.findViewById(R.id.input_latitude);
         RadioButton rbBD = view.findViewById(R.id.pos_type_bd);
 
-        // 输入框背景使用主题强调色的半透明版本，随主题变化
-        int accent = GoUtils.getThemeAccentColor(MainActivity.this);
-        int tintColor = (accent & 0x00FFFFFF) | (0x1A << 24);
-        dialog_coord.getBackground().setTint(tintColor);
-        dialog_lng.getBackground().setTint(tintColor);
-        dialog_lat.getBackground().setTint(tintColor);
-
         // 坐标串输入框：实时解析并自动填入下方经度/纬度
         final boolean[] isApplying = {false};
         dialog_coord.addTextChangedListener(new android.text.TextWatcher() {
@@ -624,7 +636,8 @@ public class MainActivity extends BaseActivity
     private MineFragment mineFragment;
 
     private void initBottomNav() {
-        com.google.android.material.bottomnavigation.BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav = findViewById(R.id.bottom_nav);
+        contentContainer = findViewById(R.id.content_container);
 
         // 底部导航选中颜色随主题变化
         int primaryColor = GoUtils.getThemePrimaryColor(this);
@@ -632,7 +645,7 @@ public class MainActivity extends BaseActivity
                 new int[]{android.R.attr.state_checked},
                 new int[]{}
         };
-        int[] colors = new int[]{primaryColor, 0xFF9E9E9E};
+        int[] colors = new int[]{primaryColor, GoUtils.getThemeOnSurfaceVariantColor(this)};
         android.content.res.ColorStateList navColorList = new android.content.res.ColorStateList(states, colors);
         bottomNav.setItemIconTintList(navColorList);
         bottomNav.setItemTextColor(navColorList);
@@ -648,6 +661,14 @@ public class MainActivity extends BaseActivity
             }
             return true;
         });
+
+        // 适配系统导航栏 inset，避免图标/文字被系统导航条遮挡
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
+            int navBarInset = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.navigationBars()).bottom;
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), navBarInset);
+            return insets;
+        });
+
         // 默认显示地图
         showMap();
     }
@@ -688,8 +709,7 @@ public class MainActivity extends BaseActivity
     @Override
     public void onFavoriteSelected(LatLng latLng, String name) {
         // 切换到地图并定位到该位置
-        com.google.android.material.bottomnavigation.BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        bottomNav.setSelectedItemId(R.id.nav_map);
+        if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_map);
         showMap();
         markLocation(latLng);
         MapStatusUpdate mapstatusupdate = MapStatusUpdateFactory.newLatLng(latLng);
@@ -975,7 +995,7 @@ public class MainActivity extends BaseActivity
                     .create();
             delDialog.show();
             delDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(MainActivity.this));
-            delDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+            delDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(MainActivity.this));
             return true;
         });
 

@@ -16,6 +16,8 @@ import com.elvishew.xlog.printer.file.backup.NeverBackupStrategy;
 import com.elvishew.xlog.printer.file.clean.FileLastModifiedCleanStrategy;
 import com.elvishew.xlog.printer.file.naming.ChangelessFileNameGenerator;
 
+import com.google.android.material.color.DynamicColors;
+
 import java.io.File;
 
 public class GoApplication extends Application {
@@ -26,6 +28,9 @@ public class GoApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // Material You 动态配色（Android 12+，将用户壁纸配色应用到应用）
+        DynamicColors.applyToActivitiesIfAvailable(this);
 
         initXlog();
 

@@ -95,7 +95,7 @@ public class HistoryActivity extends BaseActivity {
                     .create();
             dialog.show();
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(this));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(this));
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -201,7 +201,7 @@ public class HistoryActivity extends BaseActivity {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(this));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(this));
     }
 
     private void showInputDialog(String locID, String name) {
@@ -220,7 +220,7 @@ public class HistoryActivity extends BaseActivity {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(GoUtils.getThemeAccentColor(this));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(GoUtils.getThemeOnSurfaceVariantColor(this));
     }
 
     private String[] randomOffset(String longitude, String latitude) {

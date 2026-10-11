@@ -79,7 +79,6 @@
                 android:layout_height="44dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/input_button"
-                android:theme="@style/RippleWhite"
                 app:srcCompat="@drawable/ic_input"
                 app:tint="?attr/colorPrimary" />
 
@@ -89,7 +88,6 @@
                 android:layout_height="44dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/cur_position"
-                android:theme="@style/RippleWhite"
                 app:srcCompat="@drawable/ic_home_position"
                 app:tint="?attr/colorPrimary" />
 
@@ -99,7 +97,6 @@
                 android:layout_height="44dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/zoom_in"
-                android:theme="@style/RippleWhite"
                 app:srcCompat="@drawable/ic_zoom_in"
                 app:tint="?attr/colorPrimary" />
 
@@ -109,7 +106,6 @@
                 android:layout_height="44dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/zoom_out"
-                android:theme="@style/RippleWhite"
                 app:srcCompat="@drawable/ic_zoom_out"
                 app:tint="?attr/colorPrimary" />
         </LinearLayout>
@@ -121,7 +117,8 @@
             android:gravity="center_horizontal|center_vertical"
             android:paddingBottom="4dp"
             android:text="@string/app_statement"
-            android:textColor="#8A000000"
+            android:textColor="?attr/colorOnSurface"
+            android:alpha="0.54"
             android:textSize="10sp"
             tools:ignore="SmallSp" />
     </RelativeLayout>

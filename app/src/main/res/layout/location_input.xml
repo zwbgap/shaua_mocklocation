@@ -21,8 +21,8 @@
         android:inputType="text"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:textColor="#212121"
-        android:textColorHint="#9E9E9E"
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant"
         android:textSize="15sp" />
 
     <TextView
@@ -31,7 +31,7 @@
         android:layout_marginTop="4dp"
         android:layout_marginStart="4dp"
         android:text="@string/coord_parse_hint"
-        android:textColor="#BDBDBD"
+        android:textColor="?attr/colorOutline"
         android:textSize="11sp" />
 
     <!-- 分隔线 -->
@@ -40,7 +40,7 @@
         android:layout_height="1dp"
         android:layout_marginTop="14dp"
         android:layout_marginBottom="14dp"
-        android:background="#EEEEEE" />
+        android:background="?attr/colorOutlineVariant" />
 
     <!-- 经度 -->
     <EditText
@@ -55,8 +55,8 @@
         android:inputType="text"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:textColor="#212121"
-        android:textColorHint="#9E9E9E"
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant"
         android:textSize="15sp" />
 
     <!-- 纬度 -->
@@ -73,8 +73,8 @@
         android:inputType="text"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:textColor="#212121"
-        android:textColorHint="#9E9E9E"
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant"
         android:textSize="15sp" />
 
     <!-- 坐标系选择 -->
@@ -126,7 +126,7 @@
             android:layout_marginEnd="6dp"
             android:background="@drawable/bg_btn_secondary"
             android:text="@string/input_position_cancel"
-            android:textColor="#616161"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp" />
 
         <Button
@@ -135,9 +135,9 @@
             android:layout_height="42dp"
             android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:backgroundTint="?attr/colorAccent"
+            android:backgroundTint="?attr/colorPrimary"
             android:text="@string/input_position_ok"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp" />
     </LinearLayout>
 </LinearLayout>
