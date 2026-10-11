@@ -16,7 +16,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:title="收藏"
-            app:titleTextColor="@android:color/white" />
+            app:titleTextColor="?attr/colorOnPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -32,7 +32,7 @@
             android:drawablePadding="12dp"
             android:gravity="center"
             android:text="@string/favorites_empty"
-            android:textColor="#BDBDBD"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             app:drawableTopCompat="@drawable/ic_history" />
 

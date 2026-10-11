@@ -39,7 +39,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginBottom="24dp"
             android:contentDescription="@null"
-            app:backgroundTint="?attr/colorAccent"
+            app:backgroundTint="?attr/colorPrimary"
             app:elevation="6dp"
             app:pressedTranslationZ="12dp"
             app:srcCompat="@drawable/ic_position"

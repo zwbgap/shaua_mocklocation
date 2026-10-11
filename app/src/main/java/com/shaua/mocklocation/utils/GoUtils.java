@@ -53,6 +53,22 @@ public class GoUtils {
         return color;
     }
 
+    /** 获取当前主题的 surface 上的次要文字色，用于对话框次要按钮等 */
+    public static int getThemeOnSurfaceVariantColor(Context context) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorOnSurfaceVariant});
+        int color = a.getColor(0, 0xFF757575);
+        a.recycle();
+        return color;
+    }
+
+    /** 获取当前主题的主色上的文字色，用于 Toolbar 标题等 */
+    public static int getThemeOnPrimaryColor(Context context) {
+        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{com.google.android.material.R.attr.colorOnPrimary});
+        int color = a.getColor(0, 0xFFFFFFFF);
+        a.recycle();
+        return color;
+    }
+
     public static boolean isDeveloperOptionsEnabled(Context context) {
         return Settings.Global.getInt(
                 context.getContentResolver(),
@@ -222,7 +238,7 @@ public class GoUtils {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     //显示开启GPS的提示
@@ -244,7 +260,7 @@ public class GoUtils {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     // 提醒关闭 WIFI 的弹框
@@ -265,7 +281,7 @@ public class GoUtils {
         dialog.show();
         // 强制设置按钮文字颜色，避免主题导致按钮不可见
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getThemeAccentColor(context));
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF616161);
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getThemeOnSurfaceVariantColor(context));
     }
 
     public static  void DisplayToast(Context context, String str) {

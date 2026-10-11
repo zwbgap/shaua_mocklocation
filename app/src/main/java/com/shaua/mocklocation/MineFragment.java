@@ -54,7 +54,7 @@ public class MineFragment extends PreferenceFragmentCompat {
         Toolbar toolbar = new Toolbar(requireContext());
         toolbar.setBackgroundColor(GoUtils.getThemePrimaryColor(requireContext()));
         toolbar.setTitle("设置");
-        toolbar.setTitleTextColor(0xFFFFFFFF);
+        toolbar.setTitleTextColor(GoUtils.getThemeOnPrimaryColor(requireContext()));
         int actionBarSize = 0;
         int[] attrs = new int[]{androidx.appcompat.R.attr.actionBarSize};
         android.content.res.TypedArray ta = requireContext().getTheme().obtainStyledAttributes(attrs);

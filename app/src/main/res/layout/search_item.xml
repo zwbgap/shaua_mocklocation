@@ -16,7 +16,7 @@
         android:layout_height="36dp"
         android:contentDescription="@null"
         app:srcCompat="@drawable/ic_search"
-        app:tint="#9E9E9E" />
+        app:tint="?attr/colorOnSurfaceVariant" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="#212121"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp" />
 
         <TextView
@@ -41,7 +41,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="#9E9E9E"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="13sp" />
 
         <TextView

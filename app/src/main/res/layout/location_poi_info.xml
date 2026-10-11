@@ -37,7 +37,7 @@
                 android:id="@+id/poi_longitude"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#212121"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -46,7 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="#616161"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
@@ -58,7 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:textColor="#424242"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp" />
 
     <!-- 操作按钮：收藏 / 复制 / 分享 -->

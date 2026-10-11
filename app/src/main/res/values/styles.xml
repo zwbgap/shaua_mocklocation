@@ -40,13 +40,14 @@
         <!-- 兼容旧属性 -->
         <item name="colorPrimaryVariant">@color/md_primary</item>
         <item name="colorSecondaryVariant">@color/md_secondary</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowBackground">@color/md_background</item>
 
         <!-- 按钮样式 -->
         <item name="buttonStyle">@style/AppTheme.Button</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- 亮色模式：主色为深色，状态栏图标需为浅色 -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <!-- ========== 预设配色：青色（默认） ========== -->
@@ -108,14 +109,8 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
-
-    <!-- 点击波纹效果（白色背景上的灰色波纹） -->
-    <style name="RippleWhite" parent="Theme.Material3.Light.NoActionBar">
-        <item name="android:colorControlHighlight">#C8C9CA</item>
-        <item name="android:radius">14dp</item>
-    </style>
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3" />
 
     <!-- 对话框淡入淡出动画 -->
     <style name="DialogAnimFadeInFadeOut" parent="android:Animation">
@@ -126,6 +121,11 @@
     <!-- 按钮样式 -->
     <style name="AppTheme.Button" parent="Widget.Material3.Button">
         <item name="android:textColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <!-- 底部导航栏文字样式 -->
+    <style name="AppTheme.BottomNavText" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">12sp</item>
     </style>
 
 </resources>

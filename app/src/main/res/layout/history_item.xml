@@ -18,7 +18,7 @@
         android:contentDescription="@null"
         android:padding="8dp"
         app:srcCompat="@drawable/ic_position"
-        app:tint="?attr/colorPrimary" />
+        app:tint="?attr/colorOnPrimaryContainer" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="#212121"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
             android:lines="1"
             app:drawableStartCompat="@drawable/ic_date"
             android:drawablePadding="4dp"
-            android:textColor="#9E9E9E"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
 
         <TextView
@@ -62,7 +62,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="#757575"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
 
         <TextView
@@ -79,5 +79,5 @@
         android:contentDescription="@string/action_delete"
         android:padding="6dp"
         app:srcCompat="@drawable/ic_delete"
-        app:tint="#BDBDBD" />
+        app:tint="?attr/colorOutline" />
 </LinearLayout>
