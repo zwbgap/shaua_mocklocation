@@ -824,7 +824,7 @@ public class MainActivity extends BaseActivity
                         .setAction("Action", null).show();
             } else {
                 startGoLocation();
-                Snackbar.make(v, "模拟位置已启动", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(v, "模拟位置已启动 · 若目标应用显示真实位置，切换卫星图/普通图可刷新", Snackbar.LENGTH_LONG).show();
 
                 mBaiduMap.clear();
                 viewModel.setMarkedLocation(null);

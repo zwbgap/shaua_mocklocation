@@ -29,11 +29,21 @@ import com.elvishew.xlog.XLog;
 import com.shaua.mocklocation.MainActivity;
 import com.shaua.mocklocation.R;
 
+import java.lang.reflect.Method;
+import java.util.Random;
+
 /**
  * 模拟定位前台服务
  * <p>
- * 通过 {@link LocationManager#addTestProvider} 同时向 GPS 与 NETWORK 两个 Provider
+ * 通过 {@link LocationManager#addTestProvider} 同时向 GPS、NETWORK、FUSED 三个 Provider
  * 注入伪造的 Location，使系统及其他应用读取到模拟位置。
+ * <p>
+ * 对抗检测能力：
+ * <ul>
+ *   <li>反射隐藏 Location 的 mock 标记，规避 isFromMockProvider()/isMock() 检测；</li>
+ *   <li>GPS 信号拟真：精度 8~25m 随机波动、坐标缓慢随机游走（±11m）、卫星数 6~12 随机；</li>
+ *   <li>Android 12+ 同时注入 FUSED Provider，覆盖融合定位读取路径。</li>
+ * </ul>
  * <p>
  * 能力边界：
  * <ul>
@@ -54,12 +64,25 @@ public class MockLocationService extends Service {
     private static final int SERVICE_NOTE_ID = 1;
     private static final String SERVICE_NOTE_CHANNEL_ID = "MOCK_LOCATION_NOTE";
     private static final String SERVICE_NOTE_CHANNEL_NAME = "MOCK_LOCATION_NOTE";
+    /** 融合定位 Provider 名称（Android 12+ 原生存在） */
+    private static final String FUSED_PROVIDER_NAME = "fused";
 
     private double mCurLat = DEFAULT_LAT;
     private double mCurLng = DEFAULT_LNG;
     private double mCurAlt = DEFAULT_ALT;
     private float mCurBea = DEFAULT_BEA;
     private float mSpeed = DEFAULT_SPEED;
+
+    /* GPS 拟真参数：精度波动、坐标随机游走偏移 */
+    private final Random mRandom = new Random();
+    private float mCurAccuracy = 12.0F;
+    private double mJitterLat = 0D;
+    private double mJitterLng = 0D;
+    private int mJitterTick = 0;
+
+    /* 反隐藏标记：缓存解析出的隐藏 setter，避免每次注入都走反射查找 */
+    private Method mHiddenMockSetter;
+    private boolean mMockSetterResolved = false;
 
     private LocationManager mLocManager;
     private HandlerThread mLocHandlerThread;
@@ -86,6 +109,9 @@ public class MockLocationService extends Service {
         removeTestProviderGPS();
         addTestProviderGPS();
 
+        removeTestProviderFused();
+        addTestProviderFused();
+
         initGoLocation();
         initNotification();
     }
@@ -110,6 +136,7 @@ public class MockLocationService extends Service {
 
         removeTestProviderNetwork();
         removeTestProviderGPS();
+        removeTestProviderFused();
 
         stopForeground(STOP_FOREGROUND_REMOVE);
         super.onDestroy();
@@ -153,8 +180,10 @@ public class MockLocationService extends Service {
                 try {
                     Thread.sleep(100);
                     if (!isStop) {
+                        updateJitter();
                         setLocationNetwork();
                         setLocationGPS();
+                        setLocationFused();
                         sendEmptyMessage(HANDLER_MSG_ID);
                     }
                 } catch (InterruptedException e) {
@@ -202,17 +231,23 @@ public class MockLocationService extends Service {
     private void setLocationGPS() {
         try {
             Location loc = new Location(LocationManager.GPS_PROVIDER);
-            loc.setAccuracy(Criteria.ACCURACY_FINE);
+            loc.setAccuracy(mCurAccuracy);
             loc.setAltitude(mCurAlt);
             loc.setBearing(mCurBea);
-            loc.setLatitude(mCurLat);
-            loc.setLongitude(mCurLng);
+            loc.setLatitude(mCurLat + mJitterLat);
+            loc.setLongitude(mCurLng + mJitterLng);
             loc.setTime(System.currentTimeMillis());
             loc.setSpeed(mSpeed);
             loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                loc.setVerticalAccuracyMeters(mCurAccuracy * 0.8F);
+                loc.setBearingAccuracyDegrees(10F + mRandom.nextFloat() * 20F);
+                loc.setSpeedAccuracyMetersPerSecond(1F + mRandom.nextFloat());
+            }
             Bundle bundle = new Bundle();
-            bundle.putInt("satellites", 7);
+            bundle.putInt("satellites", 6 + mRandom.nextInt(7));
             loc.setExtras(bundle);
+            hideMockFlag(loc);
 
             mLocManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, loc);
         } catch (Exception e) {
@@ -256,18 +291,153 @@ public class MockLocationService extends Service {
     private void setLocationNetwork() {
         try {
             Location loc = new Location(LocationManager.NETWORK_PROVIDER);
-            loc.setAccuracy(Criteria.ACCURACY_COARSE);
+            loc.setAccuracy(30F + mRandom.nextFloat() * 50F);
             loc.setAltitude(mCurAlt);
             loc.setBearing(mCurBea);
-            loc.setLatitude(mCurLat);
-            loc.setLongitude(mCurLng);
+            loc.setLatitude(mCurLat + mJitterLat * 2.5D);
+            loc.setLongitude(mCurLng + mJitterLng * 2.5D);
             loc.setTime(System.currentTimeMillis());
             loc.setSpeed(mSpeed);
             loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+            hideMockFlag(loc);
 
             mLocManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER, loc);
         } catch (Exception e) {
             XLog.e("MockLocationService: ERROR - setLocationNetwork");
+        }
+    }
+
+    /* ============================== FUSED Provider ============================== */
+
+    private void removeTestProviderFused() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    && mLocManager.isProviderEnabled(FUSED_PROVIDER_NAME)) {
+                mLocManager.setTestProviderEnabled(FUSED_PROVIDER_NAME, false);
+                mLocManager.removeTestProvider(FUSED_PROVIDER_NAME);
+            }
+        } catch (Exception e) {
+            XLog.w("MockLocationService: removeTestProviderFused skipped - " + e.getMessage());
+        }
+    }
+
+    @SuppressLint("wrongconstant")
+    private void addTestProviderFused() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    && mLocManager.getProvider(FUSED_PROVIDER_NAME) != null) {
+                mLocManager.addTestProvider(FUSED_PROVIDER_NAME, true, true, true, false,
+                        true, true, true,
+                        ProviderProperties.POWER_USAGE_MEDIUM, ProviderProperties.ACCURACY_FINE);
+                if (!mLocManager.isProviderEnabled(FUSED_PROVIDER_NAME)) {
+                    mLocManager.setTestProviderEnabled(FUSED_PROVIDER_NAME, true);
+                }
+            }
+        } catch (Exception e) {
+            // 部分 ROM 禁止对 fused 注册 TestProvider，失败可安全忽略
+            XLog.w("MockLocationService: addTestProviderFused skipped - " + e.getMessage());
+        }
+    }
+
+    private void setLocationFused() {
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                return;
+            }
+            Location loc = new Location(FUSED_PROVIDER_NAME);
+            loc.setAccuracy(mCurAccuracy + 5F);
+            loc.setAltitude(mCurAlt);
+            loc.setBearing(mCurBea);
+            loc.setLatitude(mCurLat + mJitterLat);
+            loc.setLongitude(mCurLng + mJitterLng);
+            loc.setTime(System.currentTimeMillis());
+            loc.setSpeed(mSpeed);
+            loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+            hideMockFlag(loc);
+
+            mLocManager.setTestProviderLocation(FUSED_PROVIDER_NAME, loc);
+        } catch (Exception e) {
+            XLog.w("MockLocationService: setLocationFused skipped - " + e.getMessage());
+        }
+    }
+
+    /* ============================== 拟真与反检测 ============================== */
+
+    /**
+     * GPS 信号拟真：每约 2 秒更新一次精度与坐标随机游走，
+     * 模拟真实 GPS 的漂移特性，避免“精度恒为 1m、坐标纹丝不动”的异常特征。
+     */
+    private void updateJitter() {
+        if (mJitterTick++ % 20 != 0) {
+            return;
+        }
+        // 随机游走一步（0.00004° ≈ 4.4m）
+        mJitterLat += (mRandom.nextDouble() - 0.5D) * 0.00004D;
+        mJitterLng += (mRandom.nextDouble() - 0.5D) * 0.00004D;
+        // 漂移范围限制在 ±0.0001°（约 ±11m）内
+        mJitterLat = Math.max(-0.0001D, Math.min(0.0001D, mJitterLat));
+        mJitterLng = Math.max(-0.0001D, Math.min(0.0001D, mJitterLng));
+        // GPS 精度在 8~25m 间波动
+        mCurAccuracy = 8F + mRandom.nextFloat() * 17F;
+    }
+
+    /**
+     * 反射隐藏 Location 的模拟标记，规避目标应用通过
+     * {@link Location#isFromMockProvider()}（API&lt;31）或 isMock()（API31+）的检测。
+     * 解析结果缓存复用，均失败时记录日志并放行（不影响注入主流程）。
+     */
+    private void hideMockFlag(Location loc) {
+        if (!mMockSetterResolved) {
+            mHiddenMockSetter = resolveMockSetter();
+            mMockSetterResolved = true;
+            if (mHiddenMockSetter != null) {
+                XLog.i("MockLocationService: mock flag setter resolved - " + mHiddenMockSetter.getName());
+            } else {
+                XLog.w("MockLocationService: mock flag setter resolve failed");
+            }
+        }
+        if (mHiddenMockSetter != null) {
+            try {
+                mHiddenMockSetter.invoke(loc, false);
+            } catch (Throwable t) {
+                XLog.w("MockLocationService: hideMockFlag invoke failed - " + t.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 优先解析当前 API 对应的隐藏 setter：API 31+ 为 setMock，低版本为 setIsFromMockProvider。
+     */
+    private Method resolveMockSetter() {
+        String[] methodNames = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                ? new String[]{"setMock", "setIsFromMockProvider"}
+                : new String[]{"setIsFromMockProvider", "setMock"};
+        for (String name : methodNames) {
+            Method method = reflectiveGetDeclaredMethod(name);
+            if (method != null) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 通过直接反射或元反射获取隐藏方法，绕过 Android 9+ 的隐藏 API 访问限制。
+     */
+    @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi"})
+    private Method reflectiveGetDeclaredMethod(String methodName) {
+        try {
+            return Location.class.getDeclaredMethod(methodName, boolean.class);
+        } catch (Throwable direct) {
+            try {
+                // 元反射：借 Class.getDeclaredMethod 自身绕过隐藏 API 拦截
+                Method getDeclaredMethod = Class.class.getDeclaredMethod(
+                        "getDeclaredMethod", String.class, Class[].class);
+                return (Method) getDeclaredMethod.invoke(
+                        Location.class, methodName, new Class[]{boolean.class});
+            } catch (Throwable meta) {
+                return null;
+            }
         }
     }
 
