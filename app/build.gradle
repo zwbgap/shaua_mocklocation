@@ -67,6 +67,11 @@ android {
         buildConfig = true
     }
 
+    // 签名配置与 SDK 路径不属于应用运行时信息，排除注入 BuildConfig，避免密码被打包进 APK
+    secrets {
+        ignoreList = ["keyAlias", "keyPassword", "storeFile", "storePassword", "sdk.dir"]
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
