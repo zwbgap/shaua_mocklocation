@@ -1,10 +1,24 @@
 # 影梭 (MockLocation) 变更与部署指南
 
-> 包名：`com.shaua.mocklocation` | 版本：1.0.6 | 更新日期：2026-10-21
+> 包名：`com.shaua.mocklocation` | 版本：1.0.7 | 更新日期：2026-10-21
 
 ---
 
 ## 二、版本变更记录
+
+### v1.0.7（2026-10-21）
+
+#### CI 自动发布与安全加固
+| 变更项 | 说明 |
+|---|---|
+| CI 发布调通 | GitHub Actions 工作流完成端到端验证：推送 `v*` tag 自动构建签名 APK 并创建 Release 上传；CI 签名证书与本地完全一致（SHA-1 已比对），百度地图 AK 校验不受影响 |
+| 安全加固 | secrets-gradle-plugin 默认将 local.properties 全部键注入 BuildConfig（会打进 APK，反编译可见），新增 `secrets.ignoreList` 排除签名四项与 sdk.dir，签名密码不再进入 APK |
+| CI 修复 | workflow 的 local.properties 生成步骤补充 MAPS_API_KEY/MAPS_SAFE_CODE 字段，修复 CI 缺键导致 BuildConfig 非法表达式编译失败 |
+
+#### 使用说明
+| 变更项 | 说明 |
+|---|---|
+| 发版流程 | 后续版本发布只需：更新版本号与 CHANGELOG → 推送 main → 推送 `v*` tag，CI 自动完成构建与发布 |
 
 ### v1.0.6（2026-10-21）
 
