@@ -69,8 +69,8 @@
         <SwitchPreferenceCompat
             app:key="setting_random_offset"
             app:title="随机偏移"
-            app:summary="仅在使用历史位置时生效"
-            app:defaultValue="false"
+            app:summary="仅在使用历史位置时生效，默认开启"
+            app:defaultValue="true"
             app:iconSpaceReserved="false"/>
         <EditTextPreference
             app:key="setting_lat_max_offset"

@@ -37,6 +37,9 @@ public class GoApplication extends Application {
 
         initXlog();
 
+        // 崩溃日志自收集（依赖 XLog 初始化后的日志目录）
+        com.shaua.mocklocation.utils.CrashHandler.install(this);
+
         // 百度地图 7.5 开始，要求必须同意隐私政策，默认为false
         SDKInitializer.setAgreePrivacy(this, true);
         // 百度定位 7.5 开始，要求必须同意隐私政策，默认为false(官方说可以统一为以上接口，但实际测试并不行，定位还是需要单独设置)

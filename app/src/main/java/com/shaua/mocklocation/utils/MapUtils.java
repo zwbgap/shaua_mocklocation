@@ -1,5 +1,7 @@
 package com.shaua.mocklocation.utils;
 
+import java.util.Random;
+
 public class MapUtils {
 //    public final static String COORDINATE_TYPE_GCJ02 = "gcj02";
 //    public final static String COORDINATE_TYPE_BD09LL = "bd09ll";
@@ -14,6 +16,21 @@ public class MapUtils {
     public final static double ee = 0.00669342162296594323;
     public final static double x_pi = 3.14159265358979324 * 3000.0 / 180.0;
     
+    /**
+     * 对坐标施加均匀分布的随机偏移
+     * @param lon          原始经度
+     * @param lat          原始纬度
+     * @param maxLonMeters 经度方向最大偏移距离（米）
+     * @param maxLatMeters 纬度方向最大偏移距离（米）
+     * @param random       随机源（可注入固定种子便于测试）
+     * @return [偏移后经度, 偏移后纬度, 经度偏移量(米), 纬度偏移量(米)]
+     */
+    public static double[] randomOffset(double lon, double lat, double maxLonMeters, double maxLatMeters, Random random) {
+        double lonOffset = (random.nextDouble() * 2 - 1) * maxLonMeters;
+        double latOffset = (random.nextDouble() * 2 - 1) * maxLatMeters;
+        return new double[] { lon + lonOffset / 111320, lat + latOffset / 110574, lonOffset, latOffset };
+    }
+
     public static double[] bd2wgs(double lon, double lat) {
         double[] bd2Gcj = bd09togcj02(lon, lat);
         return gcj02towgs84(bd2Gcj[0], bd2Gcj[1]);

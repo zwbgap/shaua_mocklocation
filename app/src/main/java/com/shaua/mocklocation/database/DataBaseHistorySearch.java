@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.elvishew.xlog.XLog;
+import com.shaua.mocklocation.utils.GoUtils;
 
 public class DataBaseHistorySearch extends SQLiteOpenHelper {
     public static final String TABLE_NAME = "HistorySearch";
@@ -64,8 +65,7 @@ public class DataBaseHistorySearch extends SQLiteOpenHelper {
      */
     public static void deleteExpired(SQLiteDatabase sqLiteDatabase, int expirationDays) {
         try {
-            long expirationSeconds = (long) expirationDays * 24 * 60 * 60;
-            long threshold = System.currentTimeMillis() / 1000 - expirationSeconds;
+            long threshold = GoUtils.computeExpiredThresholdSeconds(expirationDays, System.currentTimeMillis());
             sqLiteDatabase.delete(TABLE_NAME, DB_COLUMN_TIMESTAMP + " < ?",
                     new String[]{String.valueOf(threshold)});
         } catch (Exception e) {

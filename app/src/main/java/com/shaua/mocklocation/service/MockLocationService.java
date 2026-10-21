@@ -41,7 +41,8 @@ import java.util.Random;
  * 对抗检测能力：
  * <ul>
  *   <li>反射隐藏 Location 的 mock 标记，规避 isFromMockProvider()/isMock() 检测；</li>
- *   <li>GPS 信号拟真：精度 8~25m 随机波动、坐标缓慢随机游走（±11m）、卫星数 6~12 随机；</li>
+ *   <li>GPS 信号拟真：精度 8~25m 随机波动、坐标缓慢随机游走（±11m）、卫星数 6~12 随机、
+ *       海拔 ±3m / 航向 ±10° 微波动；</li>
  *   <li>Android 12+ 同时注入 FUSED Provider，覆盖融合定位读取路径。</li>
  * </ul>
  * <p>
@@ -79,6 +80,9 @@ public class MockLocationService extends Service {
     private double mJitterLat = 0D;
     private double mJitterLng = 0D;
     private int mJitterTick = 0;
+    /* 海拔/航向微波动：避免恒定值特征 */
+    private float mAltJitter = 0F;
+    private float mBeaJitter = 0F;
 
     /* 反隐藏标记：缓存解析出的隐藏 setter，避免每次注入都走反射查找 */
     private Method mHiddenMockSetter;
@@ -232,8 +236,8 @@ public class MockLocationService extends Service {
         try {
             Location loc = new Location(LocationManager.GPS_PROVIDER);
             loc.setAccuracy(mCurAccuracy);
-            loc.setAltitude(mCurAlt);
-            loc.setBearing(mCurBea);
+            loc.setAltitude(mCurAlt + mAltJitter);
+            loc.setBearing((mCurBea + mBeaJitter + 360F) % 360F);
             loc.setLatitude(mCurLat + mJitterLat);
             loc.setLongitude(mCurLng + mJitterLng);
             loc.setTime(System.currentTimeMillis());
@@ -292,8 +296,8 @@ public class MockLocationService extends Service {
         try {
             Location loc = new Location(LocationManager.NETWORK_PROVIDER);
             loc.setAccuracy(30F + mRandom.nextFloat() * 50F);
-            loc.setAltitude(mCurAlt);
-            loc.setBearing(mCurBea);
+            loc.setAltitude(mCurAlt + mAltJitter);
+            loc.setBearing((mCurBea + mBeaJitter + 360F) % 360F);
             loc.setLatitude(mCurLat + mJitterLat * 2.5D);
             loc.setLongitude(mCurLng + mJitterLng * 2.5D);
             loc.setTime(System.currentTimeMillis());
@@ -379,6 +383,11 @@ public class MockLocationService extends Service {
         mJitterLng = Math.max(-0.0001D, Math.min(0.0001D, mJitterLng));
         // GPS 精度在 8~25m 间波动
         mCurAccuracy = 8F + mRandom.nextFloat() * 17F;
+        // 海拔在基准值 ±3m 内缓慢漂移，航向在基准值 ±10° 内缓慢漂移
+        mAltJitter += (mRandom.nextFloat() - 0.5F) * 0.8F;
+        mAltJitter = Math.max(-3F, Math.min(3F, mAltJitter));
+        mBeaJitter += (mRandom.nextFloat() - 0.5F) * 4F;
+        mBeaJitter = Math.max(-10F, Math.min(10F, mBeaJitter));
     }
 
     /**

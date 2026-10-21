@@ -222,6 +222,42 @@ public class GoUtils {
         return sdf.format(new Date(Long.parseLong(seconds + "000")));
     }
 
+    /**
+     * 语义化版本号比较（按点分段整数逐段比较）
+     * @return 负数表示 v1 &lt; v2，0 表示相等，正数表示 v1 &gt; v2
+     */
+    public static int compareVersion(String v1, String v2) {
+        String[] p1 = (v1 == null ? "" : v1.trim()).split("\\.");
+        String[] p2 = (v2 == null ? "" : v2.trim()).split("\\.");
+        int len = Math.max(p1.length, p2.length);
+        for (int i = 0; i < len; i++) {
+            int n1 = i < p1.length ? parseIntSafe(p1[i]) : 0;
+            int n2 = i < p2.length ? parseIntSafe(p2[i]) : 0;
+            if (n1 != n2) {
+                return Integer.compare(n1, n2);
+            }
+        }
+        return 0;
+    }
+
+    private static int parseIntSafe(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * 计算过期阈值（秒级时间戳）：早于该阈值的历史记录视为过期
+     * @param expirationDays 保留天数
+     * @param nowMillis       当前毫秒级时间戳
+     */
+    public static long computeExpiredThresholdSeconds(int expirationDays, long nowMillis) {
+        long expirationSeconds = (long) expirationDays * 24 * 60 * 60;
+        return nowMillis / 1000 - expirationSeconds;
+    }
+
     //提醒开启位置模拟的弹框
     public static  void showEnableMockLocationDialog(Context context) {
         AlertDialog dialog = new AlertDialog.Builder(context)

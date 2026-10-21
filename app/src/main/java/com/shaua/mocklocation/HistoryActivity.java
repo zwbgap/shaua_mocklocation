@@ -32,10 +32,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 import com.shaua.mocklocation.data.FavoriteLocation;
 import com.shaua.mocklocation.data.LocationRepository;
 import com.shaua.mocklocation.utils.GoUtils;
+import com.shaua.mocklocation.utils.MapUtils;
 
 public class HistoryActivity extends BaseActivity {
     public static final String KEY_ID = "KEY_ID";
@@ -230,16 +232,12 @@ public class HistoryActivity extends BaseActivity {
         double lon = Double.parseDouble(longitude);
         double lat = Double.parseDouble(latitude);
 
-        double randomLonOffset = (Math.random() * 2 - 1) * lon_max_offset;
-        double randomLatOffset = (Math.random() * 2 - 1) * lat_max_offset;
+        double[] offset = MapUtils.randomOffset(lon, lat, lon_max_offset, lat_max_offset, new Random());
 
-        lon += randomLonOffset / 111320;
-        lat += randomLatOffset / 110574;
-
-        String offsetMessage = String.format(Locale.US, "经度偏移: %.2f米\n纬度偏移: %.2f米", randomLonOffset, randomLatOffset);
+        String offsetMessage = String.format(Locale.US, "经度偏移: %.2f米\n纬度偏移: %.2f米", offset[2], offset[3]);
         GoUtils.DisplayToast(this, offsetMessage);
 
-        return new String[]{String.valueOf(lon), String.valueOf(lat)};
+        return new String[]{String.valueOf(offset[0]), String.valueOf(offset[1])};
     }
 
     private void initRecordListView() {
@@ -253,7 +251,7 @@ public class HistoryActivity extends BaseActivity {
             String bd09Longitude = latLngStr[0].substring(latLngStr[0].indexOf(':') + 1);
             String bd09Latitude = latLngStr[1].substring(latLngStr[1].indexOf(':') + 1);
 
-            if (sharedPreferences.getBoolean("setting_random_offset", false)) {
+            if (sharedPreferences.getBoolean("setting_random_offset", true)) {
                 String[] offsetResult = randomOffset(bd09Longitude, bd09Latitude);
                 bd09Longitude = offsetResult[0];
                 bd09Latitude = offsetResult[1];

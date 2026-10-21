@@ -1128,9 +1128,10 @@ public class MainActivity extends BaseActivity
                     try {
                         JSONObject getRetJson = new JSONObject(resp);
                         String curVersion = GoUtils.getVersionName(MainActivity.this);
+                        // 用语义化版本比较，修复 contains 在 1.0.1 vs 1.0.10 时的误判
+                        String latestVersion = getRetJson.getString("tag_name").replaceFirst("(?i)^v", "");
                         if (curVersion != null
-                                && (!getRetJson.getString("name").contains(curVersion)
-                                || !getRetJson.getString("tag_name").contains(curVersion))) {
+                                && GoUtils.compareVersion(latestVersion, curVersion) > 0) {
                             showUpdateDialog(getRetJson);
                         } else if (result) {
                             GoUtils.DisplayToast(MainActivity.this, getResources().getString(R.string.update_last));
