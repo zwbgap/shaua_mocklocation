@@ -18,9 +18,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.os.SystemClock;
+import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -41,8 +43,8 @@ import java.util.Random;
  * 对抗检测能力：
  * <ul>
  *   <li>反射隐藏 Location 的 mock 标记，规避 isFromMockProvider()/isMock() 检测；</li>
- *   <li>GPS 信号拟真：精度 8~25m 随机波动、坐标缓慢随机游走（±11m）、卫星数 6~12 随机、
- *       海拔 ±3m / 航向 ±10° 微波动；</li>
+ *   <li>GPS 信号拟真：精度 4~8m 微波动、坐标随机微动（±2m 内）、卫星数 6~12 随机；</li>
+ *   <li>海拔 ±1m / 航向 ±3° 微波动；</li>
  *   <li>Android 12+ 同时注入 FUSED Provider，覆盖融合定位读取路径。</li>
  * </ul>
  * <p>
@@ -51,6 +53,10 @@ import java.util.Random;
  *   <li>仅影响走系统 LocationManager API 路径的应用；</li>
  *   <li>若目标应用使用基站/WiFi 扫描、IP 地理、传感器等多源校验，仍可能“闪回”真实位置。</li>
  * </ul>
+ * <p>
+ * 首帧与刷新：服务启动时同步注入首帧，消除启动空窗；通知栏「刷新定位」Action 会重新注册
+ * test provider 并立即重注入一帧，用于目标应用（如打卡类）首次定位读到真实位置时快速刷新，
+ * 无需回到应用手动切换地图图层。
  */
 public class MockLocationService extends Service {
 
@@ -60,6 +66,10 @@ public class MockLocationService extends Service {
     public static final float DEFAULT_BEA = 0.0F;
     public static final float DEFAULT_SPEED = 0.0F;
 
+    /** 通知栏「刷新定位」Action：重新注册 test provider 并立即注入一帧 */
+    public static final String ACTION_REFRESH_LOCATION =
+            "com.shaua.mocklocation.action.REFRESH_LOCATION";
+
     private static final int HANDLER_MSG_ID = 0;
     private static final String SERVICE_HANDLER_NAME = "MockLocationThread";
     private static final int SERVICE_NOTE_ID = 1;
@@ -67,12 +77,13 @@ public class MockLocationService extends Service {
     private static final String SERVICE_NOTE_CHANNEL_NAME = "MOCK_LOCATION_NOTE";
     /** 融合定位 Provider 名称（Android 12+ 原生存在） */
     private static final String FUSED_PROVIDER_NAME = "fused";
+    /** 刷新提示文案的显示时长（毫秒），到时恢复常驻状态文案 */
+    private static final long REFRESH_TIPS_DURATION_MS = 2000L;
 
     private double mCurLat = DEFAULT_LAT;
     private double mCurLng = DEFAULT_LNG;
     private double mCurAlt = DEFAULT_ALT;
     private float mCurBea = DEFAULT_BEA;
-    private float mSpeed = DEFAULT_SPEED;
 
     /* GPS 拟真参数：精度波动、坐标随机游走偏移 */
     private final Random mRandom = new Random();
@@ -84,6 +95,24 @@ public class MockLocationService extends Service {
     private float mAltJitter = 0F;
     private float mBeaJitter = 0F;
 
+    /* 每帧微动：保证每帧坐标/精度都不同，避免被客户端判定为"位置未变化" */
+    private double mFrameJitterLat = 0D;
+    private double mFrameJitterLng = 0D;
+    private float mFrameAccuracy = 12.0F;
+
+    /* 速度拟真：按基准坐标位移计算，静止时给少量噪声 */
+    private float mCurSpeed = DEFAULT_SPEED;
+    private double mLastBaseLat = DEFAULT_LAT;
+    private double mLastBaseLng = DEFAULT_LNG;
+    private long mLastSpeedNanos = 0L;
+
+    /* 运行状态可观测性：融合覆盖是否接管、连续注入失败次数 */
+    private volatile boolean mFusedRegistered = false;
+    private int mInjectFailCount = 0;
+    private boolean mInjectErrorNotified = false;
+    /** 连续注入失败达到该次数（约 2 秒）后提示异常 */
+    private static final int INJECT_FAIL_THRESHOLD = 20;
+
     /* 反隐藏标记：缓存解析出的隐藏 setter，避免每次注入都走反射查找 */
     private Method mHiddenMockSetter;
     private boolean mMockSetterResolved = false;
@@ -91,7 +120,18 @@ public class MockLocationService extends Service {
     private LocationManager mLocManager;
     private HandlerThread mLocHandlerThread;
     private Handler mLocHandler;
+    /** 主线程 Handler：用于刷新提示文案延时恢复 */
+    private Handler mMainHandler;
     private boolean isStop = false;
+
+    /**
+     * 是否已收到目标坐标。避免 HandlerThread 首帧在 onStartCommand 之前
+     * 用 DEFAULT_LAT/LNG 注入一帧错误坐标；也用于循环判断是否允许注入。
+     */
+    private volatile boolean mStarted = false;
+
+    /** 串行化注入：主线程首帧 / 通知刷新 / HandlerThread 循环可能并发进入 */
+    private final Object mInjectLock = new Object();
 
     private final MockLocationBinder mBinder = new MockLocationBinder();
 
@@ -106,6 +146,7 @@ public class MockLocationService extends Service {
         XLog.i("MockLocationService: onCreate");
 
         mLocManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        mMainHandler = new Handler(Looper.getMainLooper());
 
         removeTestProviderNetwork();
         addTestProviderNetwork();
@@ -122,11 +163,19 @@ public class MockLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && ACTION_REFRESH_LOCATION.equals(intent.getAction())) {
+            // B：通知栏「刷新定位」——重新注册可能被系统回收的 test provider，并立即注入一帧
+            refreshFromNotification();
+            return super.onStartCommand(intent, flags, startId);
+        }
         if (intent != null) {
             mCurLng = intent.getDoubleExtra(MainActivity.LNG_MSG_ID, DEFAULT_LNG);
             mCurLat = intent.getDoubleExtra(MainActivity.LAT_MSG_ID, DEFAULT_LAT);
             mCurAlt = intent.getDoubleExtra(MainActivity.ALT_MSG_ID, DEFAULT_ALT);
+            mStarted = true;
             XLog.i("MockLocationService: start with lat=" + mCurLat + ", lng=" + mCurLng + ", alt=" + mCurAlt);
+            // C：首帧同步注入，消除启动空窗（原循环首帧需等 100ms，且可能注入默认坐标）
+            injectOneFrame();
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -156,23 +205,104 @@ public class MockLocationService extends Service {
             notificationManager.createNotificationChannel(mChannel);
         }
 
-        Intent clickIntent = new Intent(this, MainActivity.class);
-        PendingIntent clickPI = PendingIntent.getActivity(
-                this, 1, clickIntent, PendingIntent.FLAG_IMMUTABLE);
-
-        Notification notification = new NotificationCompat.Builder(this, SERVICE_NOTE_CHANNEL_ID)
-                .setContentTitle(getResources().getString(R.string.app_name))
-                .setContentText(getResources().getString(R.string.app_service_tips))
-                .setContentIntent(clickPI)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setOngoing(true)
-                .build();
+        // D：初始文案即反映融合覆盖状态（fused 已在 onCreate 中尝试注册完毕）
+        Notification notification = buildNotification(buildStatusText());
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             startForeground(SERVICE_NOTE_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
         } else {
             startForeground(SERVICE_NOTE_ID, notification);
         }
+    }
+
+    private Notification buildNotification(String text) {
+        Intent clickIntent = new Intent(this, MainActivity.class);
+        PendingIntent clickPI = PendingIntent.getActivity(
+                this, 1, clickIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, SERVICE_NOTE_CHANNEL_ID)
+                .setContentTitle(getResources().getString(R.string.app_name))
+                .setContentText(text)
+                .setContentIntent(clickPI)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setOngoing(true);
+
+        // B：常驻「刷新定位」Action，进飞书等应用前点一下即可重新注入，无需回到应用切图层
+        Intent refreshIntent = new Intent(this, MockLocationService.class)
+                .setAction(ACTION_REFRESH_LOCATION);
+        PendingIntent refreshPI = PendingIntent.getForegroundService(
+                this, 2, refreshIntent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.addAction(R.drawable.ic_position,
+                getResources().getString(R.string.app_action_refresh), refreshPI);
+
+        // D：融合定位未接管时常驻「定位设置」Action，引导关闭「提高精确度」（Wi-Fi/蓝牙扫描）
+        if (fusedCoverageMissing()) {
+            Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            if (settingsIntent.resolveActivity(getPackageManager()) != null) {
+                PendingIntent settingsPI = PendingIntent.getActivity(
+                        this, 3, settingsIntent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                builder.addAction(R.drawable.ic_map,
+                        getResources().getString(R.string.app_action_location_settings), settingsPI);
+            }
+        }
+        return builder.build();
+    }
+
+    /** 更新前台通知文案，用于暴露融合覆盖/注入异常状态 */
+    private void updateServiceNotification(String text) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(SERVICE_NOTE_ID, buildNotification(text));
+        }
+    }
+
+    /** D：常驻状态文案按优先级：注入异常 > 融合覆盖不可用 > 普通运行提示 */
+    private String buildStatusText() {
+        if (mInjectErrorNotified) {
+            return getResources().getString(R.string.app_service_tips_error);
+        }
+        if (fusedCoverageMissing()) {
+            return getResources().getString(R.string.app_fused_unavailable_service);
+        }
+        return getResources().getString(R.string.app_service_tips);
+    }
+
+    /** Android 12+ 未成功接管 fused Provider 时返回 true（融合覆盖不可用） */
+    private boolean fusedCoverageMissing() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !mFusedRegistered;
+    }
+
+    /**
+     * B：通知栏「刷新定位」Action 的处理逻辑。
+     * 部分 ROM / 系统会在应用退到后台后回收 test provider，这里重新注册并立即注入一帧，
+     * 抢占系统 getLastKnownLocation() 缓存，等价于「切图层重读系统位置」且无需回到应用。
+     */
+    private void refreshFromNotification() {
+        if (!mStarted) {
+            XLog.w("MockLocationService: refresh ignored - service not started yet");
+            return;
+        }
+        reRegisterTestProviders();
+        injectOneFrame();
+        updateServiceNotification(getResources().getString(R.string.app_service_tips_refreshed));
+        XLog.i("MockLocationService: location refreshed from notification action");
+        mMainHandler.postDelayed(() -> {
+            if (!isStop) {
+                updateServiceNotification(buildStatusText());
+            }
+        }, REFRESH_TIPS_DURATION_MS);
+    }
+
+    /** 重新注册三个 test provider，修复被系统回收后注入失效的问题 */
+    private void reRegisterTestProviders() {
+        removeTestProviderNetwork();
+        addTestProviderNetwork();
+        removeTestProviderGPS();
+        addTestProviderGPS();
+        removeTestProviderFused();
+        addTestProviderFused();
     }
 
     private void initGoLocation() {
@@ -184,10 +314,10 @@ public class MockLocationService extends Service {
                 try {
                     Thread.sleep(100);
                     if (!isStop) {
-                        updateJitter();
-                        setLocationNetwork();
-                        setLocationGPS();
-                        setLocationFused();
+                        // C：未收到目标坐标前不注入，避免用 DEFAULT_LAT/LNG 打出一帧错误位置
+                        if (mStarted) {
+                            injectOneFrame();
+                        }
                         sendEmptyMessage(HANDLER_MSG_ID);
                     }
                 } catch (InterruptedException e) {
@@ -197,6 +327,24 @@ public class MockLocationService extends Service {
             }
         };
         mLocHandler.sendEmptyMessage(HANDLER_MSG_ID);
+    }
+
+    /**
+     * C：同步注入一帧（GPS + NETWORK + FUSED）。
+     * 启动 / 通知刷新时立即调用，不等 100ms 循环延迟，让系统位置缓存尽快落到模拟坐标；
+     * 循环帧也复用此方法。mInjectLock 串行化，避免主线程首帧、通知刷新与循环并发写拟真状态。
+     */
+    private void injectOneFrame() {
+        if (isStop) {
+            return;
+        }
+        synchronized (mInjectLock) {
+            updateJitter();
+            updateFrameJitter();
+            setLocationNetwork();
+            setLocationGPS();
+            setLocationFused();
+        }
     }
 
     /* ============================== GPS Provider ============================== */
@@ -235,16 +383,16 @@ public class MockLocationService extends Service {
     private void setLocationGPS() {
         try {
             Location loc = new Location(LocationManager.GPS_PROVIDER);
-            loc.setAccuracy(mCurAccuracy);
-            loc.setAltitude(mCurAlt + mAltJitter);
-            loc.setBearing((mCurBea + mBeaJitter + 360F) % 360F);
-            loc.setLatitude(mCurLat + mJitterLat);
-            loc.setLongitude(mCurLng + mJitterLng);
+            loc.setAccuracy(mFrameAccuracy);
+            loc.setAltitude(baseAltitude());
+            loc.setBearing(baseBearing());
+            loc.setLatitude(mCurLat + mJitterLat + mFrameJitterLat);
+            loc.setLongitude(mCurLng + mJitterLng + mFrameJitterLng);
             loc.setTime(System.currentTimeMillis());
-            loc.setSpeed(mSpeed);
+            loc.setSpeed(mCurSpeed);
             loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                loc.setVerticalAccuracyMeters(mCurAccuracy * 0.8F);
+                loc.setVerticalAccuracyMeters(mFrameAccuracy * 0.8F);
                 loc.setBearingAccuracyDegrees(10F + mRandom.nextFloat() * 20F);
                 loc.setSpeedAccuracyMetersPerSecond(1F + mRandom.nextFloat());
             }
@@ -254,8 +402,10 @@ public class MockLocationService extends Service {
             hideMockFlag(loc);
 
             mLocManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, loc);
+            markInjectResult(true);
         } catch (Exception e) {
             XLog.e("MockLocationService: ERROR - setLocationGPS");
+            markInjectResult(false);
         }
     }
 
@@ -296,12 +446,13 @@ public class MockLocationService extends Service {
         try {
             Location loc = new Location(LocationManager.NETWORK_PROVIDER);
             loc.setAccuracy(30F + mRandom.nextFloat() * 50F);
-            loc.setAltitude(mCurAlt + mAltJitter);
-            loc.setBearing((mCurBea + mBeaJitter + 360F) % 360F);
-            loc.setLatitude(mCurLat + mJitterLat * 2.5D);
-            loc.setLongitude(mCurLng + mJitterLng * 2.5D);
+            loc.setAltitude(baseAltitude());
+            loc.setBearing(baseBearing());
+            // 与 GPS 帧保持同一坐标，避免多源输入不一致导致融合引擎弃用模拟位置
+            loc.setLatitude(mCurLat + mJitterLat + mFrameJitterLat);
+            loc.setLongitude(mCurLng + mJitterLng + mFrameJitterLng);
             loc.setTime(System.currentTimeMillis());
-            loc.setSpeed(mSpeed);
+            loc.setSpeed(mCurSpeed);
             loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
             hideMockFlag(loc);
 
@@ -336,26 +487,30 @@ public class MockLocationService extends Service {
                 if (!mLocManager.isProviderEnabled(FUSED_PROVIDER_NAME)) {
                     mLocManager.setTestProviderEnabled(FUSED_PROVIDER_NAME, true);
                 }
+                mFusedRegistered = true;
+                XLog.i("MockLocationService: fused test provider registered");
             }
         } catch (Exception e) {
-            // 部分 ROM 禁止对 fused 注册 TestProvider，失败可安全忽略
+            // 部分 ROM 禁止对 fused 注册 TestProvider，失败可安全忽略，但需暴露给界面
+            mFusedRegistered = false;
             XLog.w("MockLocationService: addTestProviderFused skipped - " + e.getMessage());
         }
     }
 
     private void setLocationFused() {
         try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || !mFusedRegistered) {
                 return;
             }
             Location loc = new Location(FUSED_PROVIDER_NAME);
-            loc.setAccuracy(mCurAccuracy + 5F);
-            loc.setAltitude(mCurAlt);
-            loc.setBearing(mCurBea);
-            loc.setLatitude(mCurLat + mJitterLat);
-            loc.setLongitude(mCurLng + mJitterLng);
+            // 与 GPS 帧共用同一组位置/海拔/航向/速度，仅精度略大，避免多源输入冲突
+            loc.setAccuracy(mFrameAccuracy + 2F);
+            loc.setAltitude(baseAltitude());
+            loc.setBearing(baseBearing());
+            loc.setLatitude(mCurLat + mJitterLat + mFrameJitterLat);
+            loc.setLongitude(mCurLng + mJitterLng + mFrameJitterLng);
             loc.setTime(System.currentTimeMillis());
-            loc.setSpeed(mSpeed);
+            loc.setSpeed(mCurSpeed);
             loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
             hideMockFlag(loc);
 
@@ -375,19 +530,93 @@ public class MockLocationService extends Service {
         if (mJitterTick++ % 20 != 0) {
             return;
         }
-        // 随机游走一步（0.00004° ≈ 4.4m）
-        mJitterLat += (mRandom.nextDouble() - 0.5D) * 0.00004D;
-        mJitterLng += (mRandom.nextDouble() - 0.5D) * 0.00004D;
-        // 漂移范围限制在 ±0.0001°（约 ±11m）内
-        mJitterLat = Math.max(-0.0001D, Math.min(0.0001D, mJitterLat));
-        mJitterLng = Math.max(-0.0001D, Math.min(0.0001D, mJitterLng));
-        // GPS 精度在 8~25m 间波动
-        mCurAccuracy = 8F + mRandom.nextFloat() * 17F;
-        // 海拔在基准值 ±3m 内缓慢漂移，航向在基准值 ±10° 内缓慢漂移
-        mAltJitter += (mRandom.nextFloat() - 0.5F) * 0.8F;
-        mAltJitter = Math.max(-3F, Math.min(3F, mAltJitter));
-        mBeaJitter += (mRandom.nextFloat() - 0.5F) * 4F;
-        mBeaJitter = Math.max(-10F, Math.min(10F, mBeaJitter));
+        // 定点打卡场景：慢漂移收敛到 ±0.00001°（约 ±1m），坐标始终落在目标点附近
+        mJitterLat += (mRandom.nextDouble() - 0.5D) * 0.000004D;
+        mJitterLng += (mRandom.nextDouble() - 0.5D) * 0.000004D;
+        mJitterLat = Math.max(-0.00001D, Math.min(0.00001D, mJitterLat));
+        mJitterLng = Math.max(-0.00001D, Math.min(0.00001D, mJitterLng));
+        // GPS 精度 4~8m：提高在融合定位中的权重，促使目标应用优先采纳模拟 GPS
+        mCurAccuracy = 4F + mRandom.nextFloat() * 4F;
+        // 海拔在基准值 ±1m 内、航向在 ±3° 内缓慢漂移
+        mAltJitter += (mRandom.nextFloat() - 0.5F) * 0.4F;
+        mAltJitter = Math.max(-1F, Math.min(1F, mAltJitter));
+        mBeaJitter += (mRandom.nextFloat() - 0.5F) * 2F;
+        mBeaJitter = Math.max(-3F, Math.min(3F, mBeaJitter));
+    }
+
+    /**
+     * 每帧微动与速度拟真：让每一帧的坐标和精度都有轻微变化，
+     * 避免客户端与融合引擎因"连续多帧位置完全相同"而判定为静止、丢弃更新。
+     */
+    private void updateFrameJitter() {
+        // 每帧随机游走（单帧约 0.1m），限制在 ±0.7m 内，保持刷新新鲜度又不偏离目标点
+        mFrameJitterLat += (mRandom.nextDouble() - 0.5D) * 0.000002D;
+        mFrameJitterLng += (mRandom.nextDouble() - 0.5D) * 0.000002D;
+        mFrameJitterLat = Math.max(-0.000006D, Math.min(0.000006D, mFrameJitterLat));
+        mFrameJitterLng = Math.max(-0.000006D, Math.min(0.000006D, mFrameJitterLng));
+        // 精度每帧小幅波动；慢变基准值由 updateJitter 每 2 秒更新
+        mFrameAccuracy = Math.max(3F, mCurAccuracy + (mRandom.nextFloat() - 0.5F) * 2F);
+        updateSpeed();
+    }
+
+    /**
+     * 按基准坐标的位移计算速度，使速度与位置变化保持一致；
+     * 静止模拟时给 0~0.6 m/s 噪声，瞬移后重置基准避免出现异常速度。
+     */
+    private void updateSpeed() {
+        long now = SystemClock.elapsedRealtimeNanos();
+        if (mLastSpeedNanos != 0L) {
+            double meters = distanceMeters(mLastBaseLat, mLastBaseLng, mCurLat, mCurLng);
+            double seconds = (now - mLastSpeedNanos) / 1_000_000_000D;
+            mCurSpeed = seconds > 0D ? (float) (meters / seconds) : 0F;
+        } else {
+            mCurSpeed = 0F;
+        }
+        if (mCurSpeed < 1F) {
+            mCurSpeed = mRandom.nextFloat() * 0.6F;
+        }
+        // 收敛到合理上限，避免融合引擎判定物理不可能
+        mCurSpeed = Math.min(mCurSpeed, 120F);
+        mLastBaseLat = mCurLat;
+        mLastBaseLng = mCurLng;
+        mLastSpeedNanos = now;
+    }
+
+    /** 计算两点间距离（米），经度按纬度做余弦校正 */
+    private double distanceMeters(double lat1, double lng1, double lat2, double lng2) {
+        double dLat = lat2 - lat1;
+        double dLng = (lng2 - lng1) * Math.cos(Math.toRadians((lat1 + lat2) / 2D));
+        return Math.sqrt(dLat * dLat + dLng * dLng) * 111000D;
+    }
+
+    /** 三个 Provider 共用的海拔值，带缓慢抖动 */
+    private double baseAltitude() {
+        return mCurAlt + mAltJitter;
+    }
+
+    /** 三个 Provider 共用的航向值，带缓慢抖动 */
+    private float baseBearing() {
+        return (mCurBea + mBeaJitter + 360F) % 360F;
+    }
+
+    /**
+     * 记录注入结果：连续失败达到阈值时把前台通知改为异常文案，
+     * 避免 provider 被系统回收后界面仍显示"运行中"却实际未注入。
+     */
+    private void markInjectResult(boolean ok) {
+        if (ok) {
+            mInjectFailCount = 0;
+            if (mInjectErrorNotified) {
+                mInjectErrorNotified = false;
+                updateServiceNotification(buildStatusText());
+            }
+            return;
+        }
+        if (++mInjectFailCount >= INJECT_FAIL_THRESHOLD && !mInjectErrorNotified) {
+            mInjectErrorNotified = true;
+            updateServiceNotification(buildStatusText());
+            XLog.e("MockLocationService: 连续注入失败 " + mInjectFailCount + " 次，已更新通知提示");
+        }
     }
 
     /**
@@ -465,8 +694,18 @@ public class MockLocationService extends Service {
             mCurLng = lng;
             mCurLat = lat;
             mCurAlt = alt;
+            mStarted = true;
+            // 传送后无位移参考，重置速度基准避免算出异常速度
+            mLastSpeedNanos = 0L;
+            // C：传送后同样立即注入一帧，避免新位置要等 100ms 循环才生效
+            injectOneFrame();
             mLocHandler.sendEmptyMessage(HANDLER_MSG_ID);
             XLog.i("MockLocationService: update position lat=" + lat + ", lng=" + lng);
+        }
+
+        /** Android 12+ 未成功接管 fused Provider 时返回 true，表示融合 coverage 不可用 */
+        public boolean isFusedCoverageMissing() {
+            return fusedCoverageMissing();
         }
     }
 }

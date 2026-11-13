@@ -141,6 +141,14 @@ public class MainActivity extends BaseActivity
     private MockLocationService.MockLocationBinder mServiceBinder;
     private ServiceConnection mConnection;
     private FloatingActionButton mButtonStart;
+    /* A：自动刷新图层相关 */
+    private RadioGroup mGroupMapType;
+    private boolean mIsResumed = false;
+    private long mLastAutoRefreshMs = 0L;
+    /** 自动刷新节流：避免锁屏/频繁切换时反复闪烁地图 */
+    private static final long AUTO_REFRESH_THROTTLE_MS = 1500L;
+    /** 启动 / 返回后延时刷新，等首帧注入与 FUSED 注册稳定 */
+    private static final long AUTO_REFRESH_DELAY_MS = 1200L;
     /*============================== 搜索历史 相关 ==============================*/
     private android.database.sqlite.SQLiteDatabase mSearchHistoryDB;
     /*============================== SearchView 相关 ==============================*/
@@ -211,6 +219,7 @@ public class MainActivity extends BaseActivity
     @Override
     protected void onPause() {
         XLog.i("MainActivity: onPause");
+        mIsResumed = false;
         mMapView.onPause();
         super.onPause();
     }
@@ -220,6 +229,12 @@ public class MainActivity extends BaseActivity
         XLog.i("MainActivity: onResume");
         mMapView.onResume();
         super.onResume();
+        mIsResumed = true;
+        // A：模拟运行中从飞书等应用返回时，自动切一次图层触发系统位置重读，
+        // 等价于用户手动切图层的 workaround，避免下次打开目标应用仍读到真实位置
+        if (Boolean.TRUE.equals(viewModel.getMockRunning().getValue())) {
+            autoRefreshMapLayer();
+        }
     }
 
     @Override
@@ -512,7 +527,7 @@ public class MainActivity extends BaseActivity
     }
 
     private void initMapButton() {
-        RadioGroup mGroupMapType = findViewById(R.id.RadioGroupMapType);
+        mGroupMapType = findViewById(R.id.RadioGroupMapType);
         mGroupMapType.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.mapNormal) {
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
@@ -525,6 +540,31 @@ public class MainActivity extends BaseActivity
         findViewById(R.id.zoom_in).setOnClickListener(v -> mBaiduMap.animateMapStatus(MapStatusUpdateFactory.zoomIn()));
         findViewById(R.id.zoom_out).setOnClickListener(v -> mBaiduMap.animateMapStatus(MapStatusUpdateFactory.zoomOut()));
         findViewById(R.id.input_pos).setOnClickListener(v -> showInputPositionDialog());
+    }
+
+    /**
+     * A：自动切一次地图图层（普通 ↔ 卫星再切回），触发百度 SDK 重建「我的位置」图层并重读系统位置。
+     * 目标应用（飞书打卡等）首次定位读到真实位置时，这一动作等价于用户手动切图层的 workaround，
+     * 但无需用户操作，且不会触发服务端网络定位（仍是系统 LocationManager 的模拟坐标）。
+     */
+    private void autoRefreshMapLayer() {
+        if (mBaiduMap == null || mGroupMapType == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - mLastAutoRefreshMs < AUTO_REFRESH_THROTTLE_MS) {
+            return;
+        }
+        mLastAutoRefreshMs = now;
+
+        int checkedId = mGroupMapType.getCheckedRadioButtonId();
+        boolean currentlySatellite = (checkedId == R.id.mapSatellite);
+        // 先切到另一种类型，再切回原类型，RadioGroup 状态与视觉保持一致
+        mBaiduMap.setMapType(currentlySatellite
+                ? BaiduMap.MAP_TYPE_NORMAL : BaiduMap.MAP_TYPE_SATELLITE);
+        mBaiduMap.setMapType(currentlySatellite
+                ? BaiduMap.MAP_TYPE_SATELLITE : BaiduMap.MAP_TYPE_NORMAL);
+        XLog.i("MainActivity: autoRefreshMapLayer done");
     }
 
     private void showInputPositionDialog() {
@@ -824,7 +864,24 @@ public class MainActivity extends BaseActivity
                         .setAction("Action", null).show();
             } else {
                 startGoLocation();
-                Snackbar.make(v, "模拟位置已启动 · 若目标应用显示真实位置，切换卫星图/普通图可刷新", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(v, R.string.app_snackbar_start, Snackbar.LENGTH_LONG).show();
+
+                // A：启动后延时自动切一次图层，触发系统位置重读，避免首个目标应用读到真实位置。
+                // 延时等首帧注入与 FUSED 注册稳定；同时手动方式（切图层 / 通知栏刷新）仍保留为兜底。
+                v.postDelayed(() -> {
+                    if (mIsResumed) {
+                        autoRefreshMapLayer();
+                        Snackbar.make(v, R.string.app_refresh_auto, Snackbar.LENGTH_SHORT).show();
+                    }
+                }, AUTO_REFRESH_DELAY_MS);
+
+                // D：服务在 onCreate 中注册 fused Provider，延迟检查并提示融合覆盖不可用的降级情况
+                //    （常驻状态已由服务通知承担，这里只做一次界面层提示）
+                v.postDelayed(() -> {
+                    if (mServiceBinder != null && mServiceBinder.isFusedCoverageMissing()) {
+                        Snackbar.make(v, R.string.app_fused_unavailable, Snackbar.LENGTH_LONG).show();
+                    }
+                }, 800);
 
                 mBaiduMap.clear();
                 viewModel.setMarkedLocation(null);
