@@ -22,6 +22,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.os.SystemClock;
+import android.content.SharedPreferences;
 import android.provider.Settings;
 
 import androidx.annotation.NonNull;
@@ -55,7 +56,7 @@ import java.util.Random;
  * </ul>
  * <p>
  * 首帧与刷新：服务启动时同步注入首帧，消除启动空窗；通知栏「刷新定位」Action 会重新注册
- * test provider 并立即重注入一帧，用于目标应用（如打卡类）首次定位读到真实位置时快速刷新，
+ * test provider 并立即重注入一帧，用于目标应用首次定位读到真实位置时快速刷新，
  * 无需回到应用手动切换地图图层。
  */
 public class MockLocationService extends Service {
@@ -70,6 +71,16 @@ public class MockLocationService extends Service {
     public static final String ACTION_REFRESH_LOCATION =
             "com.shaua.mocklocation.action.REFRESH_LOCATION";
 
+    /** P0-4：bind Intent 携带坐标，消除 bindService / startForegroundService 之间的时序窗口 */
+    public static final String EXTRA_BIND_COORDS = "EXTRA_BIND_COORDS";
+
+    /** P0-3：目标坐标持久化文件（服务被系统杀掉后重启时恢复） */
+    private static final String PREFS_MOCK_STATE = "mock_state";
+    private static final String KEY_MOCK_LAT = "mock_lat";
+    private static final String KEY_MOCK_LNG = "mock_lng";
+    private static final String KEY_MOCK_ALT = "mock_alt";
+    private static final String KEY_MOCK_SAVED = "mock_saved";
+
     private static final int HANDLER_MSG_ID = 0;
     private static final String SERVICE_HANDLER_NAME = "MockLocationThread";
     private static final int SERVICE_NOTE_ID = 1;
@@ -80,9 +91,11 @@ public class MockLocationService extends Service {
     /** 刷新提示文案的显示时长（毫秒），到时恢复常驻状态文案 */
     private static final long REFRESH_TIPS_DURATION_MS = 2000L;
 
-    private double mCurLat = DEFAULT_LAT;
-    private double mCurLng = DEFAULT_LNG;
-    private double mCurAlt = DEFAULT_ALT;
+    /* P0-2：坐标与运行状态跨线程可见（主线程写、HandlerThread 读）；
+       写入统一经 applyCoordinates 在 mInjectLock 内完成，读端在 injectOneFrame 内加锁。 */
+    private volatile double mCurLat = DEFAULT_LAT;
+    private volatile double mCurLng = DEFAULT_LNG;
+    private volatile double mCurAlt = DEFAULT_ALT;
     private float mCurBea = DEFAULT_BEA;
 
     /* GPS 拟真参数：精度波动、坐标随机游走偏移 */
@@ -122,7 +135,8 @@ public class MockLocationService extends Service {
     private Handler mLocHandler;
     /** 主线程 Handler：用于刷新提示文案延时恢复 */
     private Handler mMainHandler;
-    private boolean isStop = false;
+    /** P0-2：onDestroy 写、HandlerThread 读，必须 volatile */
+    private volatile boolean isStop = false;
 
     /**
      * 是否已收到目标坐标。避免 HandlerThread 首帧在 onStartCommand 之前
@@ -130,13 +144,26 @@ public class MockLocationService extends Service {
      */
     private volatile boolean mStarted = false;
 
-    /** 串行化注入：主线程首帧 / 通知刷新 / HandlerThread 循环可能并发进入 */
+    /**
+     * P0-1：串行化「provider 重注册 + 坐标写入 + 注入」整个临界区。
+     * 通知刷新、启动首帧、Binder.setPosition、HandlerThread 循环均可能并发进入，
+     * 若重注册与注入不互斥，会出现 provider 被 remove 期间 setTestProviderLocation 抛异常丢帧。
+     */
     private final Object mInjectLock = new Object();
 
     private final MockLocationBinder mBinder = new MockLocationBinder();
 
     @Override
     public IBinder onBind(Intent intent) {
+        // P0-4：bindService(BIND_AUTO_CREATE) 会先触发 onCreate，此时若 bind Intent 已带坐标，
+        // 立即应用并注入首帧，消除「服务已运行但尚无目标坐标」的窗口（旧实现依赖随后
+        // startForegroundService 传坐标，两次调用间存在时序窗口）。
+        if (intent != null && intent.getBooleanExtra(EXTRA_BIND_COORDS, false)) {
+            double lng = intent.getDoubleExtra(MainActivity.LNG_MSG_ID, DEFAULT_LNG);
+            double lat = intent.getDoubleExtra(MainActivity.LAT_MSG_ID, DEFAULT_LAT);
+            double alt = intent.getDoubleExtra(MainActivity.ALT_MSG_ID, DEFAULT_ALT);
+            applyCoordinates(lng, lat, alt, true);
+        }
         return mBinder;
     }
 
@@ -148,14 +175,14 @@ public class MockLocationService extends Service {
         mLocManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         mMainHandler = new Handler(Looper.getMainLooper());
 
-        removeTestProviderNetwork();
-        addTestProviderNetwork();
-
-        removeTestProviderGPS();
-        addTestProviderGPS();
-
-        removeTestProviderFused();
-        addTestProviderFused();
+        synchronized (mInjectLock) {
+            removeTestProviderNetwork();
+            addTestProviderNetwork();
+            removeTestProviderGPS();
+            addTestProviderGPS();
+            removeTestProviderFused();
+            addTestProviderFused();
+        }
 
         initGoLocation();
         initNotification();
@@ -166,18 +193,26 @@ public class MockLocationService extends Service {
         if (intent != null && ACTION_REFRESH_LOCATION.equals(intent.getAction())) {
             // B：通知栏「刷新定位」——重新注册可能被系统回收的 test provider，并立即注入一帧
             refreshFromNotification();
-            return super.onStartCommand(intent, flags, startId);
+            return START_STICKY;
         }
         if (intent != null) {
-            mCurLng = intent.getDoubleExtra(MainActivity.LNG_MSG_ID, DEFAULT_LNG);
-            mCurLat = intent.getDoubleExtra(MainActivity.LAT_MSG_ID, DEFAULT_LAT);
-            mCurAlt = intent.getDoubleExtra(MainActivity.ALT_MSG_ID, DEFAULT_ALT);
-            mStarted = true;
-            XLog.i("MockLocationService: start with lat=" + mCurLat + ", lng=" + mCurLng + ", alt=" + mCurAlt);
+            double lng = intent.getDoubleExtra(MainActivity.LNG_MSG_ID, DEFAULT_LNG);
+            double lat = intent.getDoubleExtra(MainActivity.LAT_MSG_ID, DEFAULT_LAT);
+            double alt = intent.getDoubleExtra(MainActivity.ALT_MSG_ID, DEFAULT_ALT);
+            XLog.i("MockLocationService: start with lat=" + lat + ", lng=" + lng + ", alt=" + alt);
             // C：首帧同步注入，消除启动空窗（原循环首帧需等 100ms，且可能注入默认坐标）
-            injectOneFrame();
+            applyCoordinates(lng, lat, alt, true);
+        } else {
+            // P0-3：START_STICKY 被系统重启时 intent 为 null，恢复上次保存的模拟坐标并立即注入，
+            // 避免坐标退回 DEFAULT_LAT/LNG（济南）且 mStarted=false 导致静默丢失模拟位置。
+            if (restoreSavedCoordinates()) {
+                XLog.i("MockLocationService: restored saved coordinates after restart");
+                injectOneFrame();
+            } else {
+                XLog.w("MockLocationService: restart with null intent and no saved coordinates");
+            }
         }
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -187,12 +222,73 @@ public class MockLocationService extends Service {
         mLocHandler.removeMessages(HANDLER_MSG_ID);
         mLocHandlerThread.quit();
 
-        removeTestProviderNetwork();
-        removeTestProviderGPS();
-        removeTestProviderFused();
+        synchronized (mInjectLock) {
+            removeTestProviderNetwork();
+            removeTestProviderGPS();
+            removeTestProviderFused();
+        }
 
         stopForeground(STOP_FOREGROUND_REMOVE);
         super.onDestroy();
+    }
+
+    /**
+     * P0-2/P0-1：统一写入坐标并立即注入首帧，整个临界区在 mInjectLock 内完成。
+     * 坐标写入前已持久化（P0-3），服务重启可恢复。
+     */
+    private void applyCoordinates(double lng, double lat, double alt, boolean injectNow) {
+        synchronized (mInjectLock) {
+            mCurLng = lng;
+            mCurLat = lat;
+            mCurAlt = alt;
+            mStarted = true;
+            mLastSpeedNanos = 0L;
+            saveCoordinates(lng, lat, alt);
+            if (injectNow) {
+                injectFrameLocked();
+            }
+        }
+    }
+
+    /** P0-3：持久化目标坐标，供 START_STICKY 重启后恢复 */
+    private void saveCoordinates(double lng, double lat, double alt) {
+        SharedPreferences sp = getSharedPreferences(PREFS_MOCK_STATE, MODE_PRIVATE);
+        sp.edit()
+                .putString(KEY_MOCK_LAT, Double.toString(lat))
+                .putString(KEY_MOCK_LNG, Double.toString(lng))
+                .putString(KEY_MOCK_ALT, Double.toString(alt))
+                .putBoolean(KEY_MOCK_SAVED, true)
+                .apply();
+    }
+
+    /** P0-3：恢复上次保存的坐标；无有效记录时返回 false */
+    private boolean restoreSavedCoordinates() {
+        SharedPreferences sp = getSharedPreferences(PREFS_MOCK_STATE, MODE_PRIVATE);
+        if (!sp.getBoolean(KEY_MOCK_SAVED, false)) {
+            return false;
+        }
+        try {
+            double lat = Double.parseDouble(sp.getString(KEY_MOCK_LAT, ""));
+            double lng = Double.parseDouble(sp.getString(KEY_MOCK_LNG, ""));
+            double alt = Double.parseDouble(sp.getString(KEY_MOCK_ALT, Double.toString(DEFAULT_ALT)));
+            if (Double.isNaN(lat) || Double.isNaN(lng) || Double.isNaN(alt)) {
+                return false;
+            }
+            applyCoordinates(lng, lat, alt, false);
+            return true;
+        } catch (Exception e) {
+            XLog.w("MockLocationService: restoreSavedCoordinates failed - " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 用户主动停止模拟时清除持久化状态，避免服务被系统重启后误恢复一个已停止的位置。
+     * 由 MainActivity.stopGoLocation() 调用。
+     */
+    public static void clearSavedCoordinates(Context context) {
+        context.getSharedPreferences(PREFS_MOCK_STATE, MODE_PRIVATE)
+                .edit().remove(KEY_MOCK_SAVED).apply();
     }
 
     private void initNotification() {
@@ -227,7 +323,7 @@ public class MockLocationService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true);
 
-        // B：常驻「刷新定位」Action，进飞书等应用前点一下即可重新注入，无需回到应用切图层
+        // B：常驻「刷新定位」Action，进目标应用前点一下即可重新注入，无需回到应用切图层
         Intent refreshIntent = new Intent(this, MockLocationService.class)
                 .setAction(ACTION_REFRESH_LOCATION);
         PendingIntent refreshPI = PendingIntent.getForegroundService(
@@ -258,20 +354,24 @@ public class MockLocationService extends Service {
         }
     }
 
-    /** D：常驻状态文案按优先级：注入异常 > 融合覆盖不可用 > 普通运行提示 */
+    /** D：常驻状态文案按优先级：注入异常 > 融合覆盖不可用 > 普通运行提示（判定逻辑抽到 ServiceState 便于单测） */
     private String buildStatusText() {
-        if (mInjectErrorNotified) {
-            return getResources().getString(R.string.app_service_tips_error);
+        ServiceState.NoticeStatus status = ServiceState.noticeStatus(
+                mInjectErrorNotified, mFusedRegistered, Build.VERSION.SDK_INT);
+        switch (status) {
+            case INJECT_ERROR:
+                return getResources().getString(R.string.app_service_tips_error);
+            case FUSED_MISSING:
+                return getResources().getString(R.string.app_fused_unavailable_service);
+            case NORMAL:
+            default:
+                return getResources().getString(R.string.app_service_tips);
         }
-        if (fusedCoverageMissing()) {
-            return getResources().getString(R.string.app_fused_unavailable_service);
-        }
-        return getResources().getString(R.string.app_service_tips);
     }
 
     /** Android 12+ 未成功接管 fused Provider 时返回 true（融合覆盖不可用） */
     private boolean fusedCoverageMissing() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !mFusedRegistered;
+        return ServiceState.fusedCoverageMissing(mFusedRegistered, Build.VERSION.SDK_INT);
     }
 
     /**
@@ -284,8 +384,12 @@ public class MockLocationService extends Service {
             XLog.w("MockLocationService: refresh ignored - service not started yet");
             return;
         }
-        reRegisterTestProviders();
-        injectOneFrame();
+        // P0-1：重注册 provider 与注入必须落在同一把锁内，否则 HandlerThread 循环帧可能在
+        // provider 被 remove 的瞬间调用 setTestProviderLocation 而抛异常丢帧。
+        synchronized (mInjectLock) {
+            reRegisterTestProviders();
+            injectFrameLocked();
+        }
         updateServiceNotification(getResources().getString(R.string.app_service_tips_refreshed));
         XLog.i("MockLocationService: location refreshed from notification action");
         mMainHandler.postDelayed(() -> {
@@ -295,7 +399,7 @@ public class MockLocationService extends Service {
         }, REFRESH_TIPS_DURATION_MS);
     }
 
-    /** 重新注册三个 test provider，修复被系统回收后注入失效的问题 */
+    /** 重新注册三个 test provider，修复被系统回收后注入失效的问题。调用方须持有 mInjectLock */
     private void reRegisterTestProviders() {
         removeTestProviderNetwork();
         addTestProviderNetwork();
@@ -339,12 +443,20 @@ public class MockLocationService extends Service {
             return;
         }
         synchronized (mInjectLock) {
-            updateJitter();
-            updateFrameJitter();
-            setLocationNetwork();
-            setLocationGPS();
-            setLocationFused();
+            injectFrameLocked();
         }
+    }
+
+    /** 实际注入一帧；调用方须持有 mInjectLock */
+    private void injectFrameLocked() {
+        if (isStop) {
+            return;
+        }
+        updateJitter();
+        updateFrameJitter();
+        setLocationNetwork();
+        setLocationGPS();
+        setLocationFused();
     }
 
     /* ============================== GPS Provider ============================== */
@@ -530,7 +642,7 @@ public class MockLocationService extends Service {
         if (mJitterTick++ % 20 != 0) {
             return;
         }
-        // 定点打卡场景：慢漂移收敛到 ±0.00001°（约 ±1m），坐标始终落在目标点附近
+        // 定点停留场景：慢漂移收敛到 ±0.00001°（约 ±1m），坐标始终落在目标点附近
         mJitterLat += (mRandom.nextDouble() - 0.5D) * 0.000004D;
         mJitterLng += (mRandom.nextDouble() - 0.5D) * 0.000004D;
         mJitterLat = Math.max(-0.00001D, Math.min(0.00001D, mJitterLat));
@@ -691,14 +803,8 @@ public class MockLocationService extends Service {
          */
         public void setPosition(double lng, double lat, double alt) {
             mLocHandler.removeMessages(HANDLER_MSG_ID);
-            mCurLng = lng;
-            mCurLat = lat;
-            mCurAlt = alt;
-            mStarted = true;
-            // 传送后无位移参考，重置速度基准避免算出异常速度
-            mLastSpeedNanos = 0L;
-            // C：传送后同样立即注入一帧，避免新位置要等 100ms 循环才生效
-            injectOneFrame();
+            // P0-2/P0-3：坐标写入、持久化与首帧注入统一走 applyCoordinates（持有 mInjectLock）
+            applyCoordinates(lng, lat, alt, true);
             mLocHandler.sendEmptyMessage(HANDLER_MSG_ID);
             XLog.i("MockLocationService: update position lat=" + lat + ", lng=" + lng);
         }

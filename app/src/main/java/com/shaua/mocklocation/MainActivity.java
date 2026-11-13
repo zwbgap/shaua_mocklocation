@@ -91,6 +91,7 @@ import com.shaua.mocklocation.data.FavoriteLocation;
 import com.shaua.mocklocation.data.LocationRepository;
 import com.shaua.mocklocation.database.DataBaseHistorySearch;
 import com.shaua.mocklocation.service.MockLocationService;
+import com.shaua.mocklocation.service.ServiceState;
 import com.shaua.mocklocation.utils.GoUtils;
 import com.shaua.mocklocation.utils.MapUtils;
 import com.shaua.mocklocation.utils.ShareUtils;
@@ -144,6 +145,8 @@ public class MainActivity extends BaseActivity
     /* A：自动刷新图层相关 */
     private RadioGroup mGroupMapType;
     private boolean mIsResumed = false;
+    /** P1-5：仅在真正退到后台（onStop）后再返回时刷新，避免权限弹窗/锁屏等只走 onPause 的场景误触发 */
+    private boolean mWasInBackground = false;
     private long mLastAutoRefreshMs = 0L;
     /** 自动刷新节流：避免锁屏/频繁切换时反复闪烁地图 */
     private static final long AUTO_REFRESH_THROTTLE_MS = 1500L;
@@ -230,9 +233,11 @@ public class MainActivity extends BaseActivity
         mMapView.onResume();
         super.onResume();
         mIsResumed = true;
-        // A：模拟运行中从飞书等应用返回时，自动切一次图层触发系统位置重读，
-        // 等价于用户手动切图层的 workaround，避免下次打开目标应用仍读到真实位置
-        if (Boolean.TRUE.equals(viewModel.getMockRunning().getValue())) {
+        // P1-5/A：仅在真正从后台返回时刷新，权限弹窗、锁屏、应用内对话框等
+        // 只走 onPause/onResume 的场景不触发，避免地图无谓闪烁。
+        if (mWasInBackground && Boolean.TRUE.equals(viewModel.getMockRunning().getValue())) {
+            // 从其他应用返回（例如切换去查看目标应用后回来）时刷新系统位置缓存
+            mWasInBackground = false;
             autoRefreshMapLayer();
         }
     }
@@ -240,6 +245,7 @@ public class MainActivity extends BaseActivity
     @Override
     protected void onStop() {
         XLog.i("MainActivity: onStop");
+        mWasInBackground = true;
         super.onStop();
     }
 
@@ -251,6 +257,12 @@ public class MainActivity extends BaseActivity
             unbindService(mConnection);
             Intent serviceGoIntent = new Intent(MainActivity.this, MockLocationService.class);
             stopService(serviceGoIntent);
+            // P0-3：用户主动销毁 Activity（如划掉最近任务）时清除持久化坐标，
+            // 避免服务随后被系统以 START_STICKY 重启时自动恢复一个用户已放弃的模拟位置。
+            // 配置变更（旋转等）isFinishing() 为 false，不清理。
+            if (isFinishing()) {
+                MockLocationService.clearSavedCoordinates(this);
+            }
         }
         unregisterReceiver(mDownloadBdRcv);
 
@@ -544,15 +556,19 @@ public class MainActivity extends BaseActivity
 
     /**
      * A：自动切一次地图图层（普通 ↔ 卫星再切回），触发百度 SDK 重建「我的位置」图层并重读系统位置。
-     * 目标应用（飞书打卡等）首次定位读到真实位置时，这一动作等价于用户手动切图层的 workaround，
+     * 目标应用首次定位读到真实位置时，这一动作等价于用户手动切图层的 workaround，
      * 但无需用户操作，且不会触发服务端网络定位（仍是系统 LocationManager 的模拟坐标）。
+     * <p>
+     * 注：切图层是本项目实测有效的机制（见 CHANGELOG v1.0.5），此处保留不改；
+     * 仅把节流判定抽到 {@link com.shaua.mocklocation.service.ServiceState#shouldAutoRefresh}
+     * 以便单测，并修复系统时钟回拨时被永久节流的问题。
      */
     private void autoRefreshMapLayer() {
         if (mBaiduMap == null || mGroupMapType == null) {
             return;
         }
         long now = System.currentTimeMillis();
-        if (now - mLastAutoRefreshMs < AUTO_REFRESH_THROTTLE_MS) {
+        if (!ServiceState.shouldAutoRefresh(now, mLastAutoRefreshMs, AUTO_REFRESH_THROTTLE_MS)) {
             return;
         }
         mLastAutoRefreshMs = now;
@@ -801,13 +817,17 @@ public class MainActivity extends BaseActivity
         if (marked == null) {
             return;
         }
-        Intent serviceIntent = new Intent(MainActivity.this, MockLocationService.class);
-        bindService(serviceIntent, mConnection, BIND_AUTO_CREATE);
         double[] latLng = MapUtils.bd2wgs(marked.longitude, marked.latitude);
+        double alt = Double.parseDouble(sharedPreferences.getString("setting_altitude", "55.0"));
+
+        Intent serviceIntent = new Intent(MainActivity.this, MockLocationService.class);
         serviceIntent.putExtra(LNG_MSG_ID, latLng[0]);
         serviceIntent.putExtra(LAT_MSG_ID, latLng[1]);
-        double alt = Double.parseDouble(sharedPreferences.getString("setting_altitude", "55.0"));
         serviceIntent.putExtra(ALT_MSG_ID, alt);
+        // P0-4：bind 的 Intent 直接携带坐标，服务在 onBind 即可应用并注入首帧，
+        // 消除「onCreate 已跑、但坐标要等随后 startForegroundService 才送达」的时序窗口。
+        serviceIntent.putExtra(MockLocationService.EXTRA_BIND_COORDS, true);
+        bindService(serviceIntent, mConnection, BIND_AUTO_CREATE);
 
         startForegroundService(serviceIntent);
         XLog.d("startForegroundService: MockLocationService");
@@ -816,6 +836,8 @@ public class MainActivity extends BaseActivity
 
     private void stopGoLocation() {
         unbindService(mConnection);
+        // P0-3：用户主动停止时清除持久化坐标，避免服务被系统重启后误恢复已停止的位置
+        MockLocationService.clearSavedCoordinates(this);
         Intent serviceIntent = new Intent(MainActivity.this, MockLocationService.class);
         stopService(serviceIntent);
         viewModel.setMockRunning(false);

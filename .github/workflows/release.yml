@@ -39,8 +39,11 @@ jobs:
           MAPS_SAFE_CODE=${{ secrets.MAPS_SAFE_CODE }}
           EOF
 
+      - name: Run unit tests
+        run: chmod +x gradlew && ./gradlew test --stacktrace
+
       - name: Build release APK
-        run: chmod +x gradlew && ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

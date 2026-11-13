@@ -1,16 +1,33 @@
 # 影梭 (MockLocation) 变更与部署指南
 
-> 包名：`com.shaua.mocklocation` | 版本：1.0.7 | 更新日期：2026-10-21
+> 包名：`com.shaua.mocklocation` | 版本：1.0.9 | 更新日期：2026-11-14
 
 ---
 
 ## 二、版本变更记录
 
+### v1.0.9（2026-11-14）
+
+#### 鲁棒性与工程质量加固（v1.0.8 改动的代码审查后续优化）
+
+| 编号 | 变更项 | 说明 |
+|---|---|---|
+| P0-1 | 注入锁覆盖 provider 重注册 | `reRegisterTestProviders()` 与 `injectFrameLocked()` 统一在 `mInjectLock` 内串行执行，修复通知刷新时 HandlerThread 循环帧可能在 provider 被 remove 期间调用 `setTestProviderLocation` 而抛异常丢帧 |
+| P0-2 | 跨线程可见性 | `mCurLat/mCurLng/mCurAlt/isStop` 改为 `volatile`；坐标写入统一收敛到 `applyCoordinates()`（持锁），循环读端在 `injectFrameLocked()` 持锁读取，消除数据竞争 |
+| P0-3 | 服务重启恢复 | `onStartCommand` 返回 `START_STICKY`；目标坐标持久化到 `mock_state` SharedPreferences，服务被系统杀后以 null intent 重启时恢复坐标并立即注入（旧实现静默退回默认坐标且不注入）；用户主动停止 / `isFinishing()` 销毁时清除存档，避免误恢复 |
+| P0-4 | 消除启动时序窗口 | `bindService` 的 Intent 携带坐标（`EXTRA_BIND_COORDS`），服务在 `onBind` 即应用并注入首帧，不再依赖随后 `startForegroundService` 才送达坐标 |
+| P1-5 | 自动刷新精准化 | 新增 `mWasInBackground`，仅在真正 `onStop` 后返回时刷新，权限弹窗/锁屏/应用内对话框等只走 `onPause/onResume` 的场景不再触发地图闪烁；节流判定抽到 `ServiceState.shouldAutoRefresh` 并修复时钟回拨导致永久节流 |
+| P1-6 | CI 跑测试 | [release.yml](.github/workflows/release.yml) 在 `assembleRelease` 前新增 `./gradlew test`，坐标转换与状态逻辑的回归不再靠人肉发现 |
+| P1-7 | 合规措辞中性化 | 移除 README / CHANGELOG / 通知文案 / 代码注释中「飞书、打卡、考勤」等指向具体用途的表述，统一改为「目标应用首次定位读到真实位置」，与用户协议「仅供开发调试」保持一致；用户协议原有免责条款保留 |
+| — | 新增 `ServiceState` | 抽出通知状态优先级、融合覆盖判定、刷新节流三个纯逻辑方法（不依赖 Android framework），配套 8 个 JUnit 用例；单测总数 12 → 20 |
+
+> 说明：切图层仍是本项目实测有效的机制（v1.0.5 记录），本次保留不改，仅收紧触发条件。P2 项（MainActivity 拆分、ViewBinding、新手引导、深色模式验收、国际化等）仍留在 ROADMAP，本次未改动。
+
 ### v1.0.8（2026-11-14）
 
 #### 目标应用「闪回真实位置」体验优化
 
-> 背景：模拟启动后打开飞书等打卡应用，首次定位常读到真实位置导致打卡失败，需返回迁境手动切换卫星图/普通图再回目标应用才能刷成模拟位置。本次把该 workaround 自动化并补齐启动空窗。
+> 背景：模拟启动后打开部分目标应用，其首次定位常读到真实位置，需返回迁境手动切换卫星图/普通图再回目标应用才能刷成模拟位置。本次把该 workaround 自动化并补齐启动空窗。
 
 | 变更项 | 说明 |
 |---|---|

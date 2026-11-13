@@ -28,8 +28,8 @@ android {
         applicationId "com.shaua.mocklocation"
         minSdkVersion 27
         targetSdkVersion 35
-        versionCode 108
-        versionName '1.0.8' // https://semver.org/lang/zh-CN/
+        versionCode 109
+        versionName '1.0.9' // https://semver.org/lang/zh-CN/
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['zh', 'zh-rCN', 'en', 'en-rUS']
         ndk {
